@@ -19,11 +19,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if not users_db.exists(user_id):
         users_db.create(user_id)
 
-    await update.message.reply_text(
+    await update.message.reply_text(text=
         "🌟 به عرصه ارتقای تجربه اینترنتی خود با سرویس‌های V2RAY و کاهش پینگ خوش آمدید!\n\n"
         "🚀 ما اینجا هستیم تا سریع‌ترین و بی‌نقص‌ترین دسترسی به شبکه جهانی را برای شما به ارمغان بیاوریم.\n\n"
         "✨ بدون هیچ محدودیت و اختلالی، تجربه‌ای بی‌نظیر در دنیای مجازی را با ما تجربه کنید\n\n"
-        "🔗 | @AbSardKonBot",
+        f"🔗 | @{settings.telegram_bot_id}",
         reply_markup=get_keyboard(is_admin=is_admin)
     )
 
