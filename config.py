@@ -12,7 +12,7 @@ dotenv.load_dotenv(dotenv_path=".env")
 class Settings(BaseSettings):
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN")
     telegram_bot_admin_ids: List[int] = None
-    firebase_sdk_file_name: str = os.getenv("FIREBASE_SDK_PATH")
+    firebase_admin_sdk_path: str = os.getenv("FIREBASE_ADMIN_SDK_PATH")
 
     @field_validator("telegram_bot_admin_ids", mode="before")
     def parse_admin_ids(cls, value: None) -> List[int]:
