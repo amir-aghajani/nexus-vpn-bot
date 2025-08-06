@@ -37,6 +37,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     await update.message.reply_text(
         text=welcome_message,
         reply_markup=get_start_keyboard(is_admin=is_admin),
+        reply_to_message_id=update.message.message_id,
     )
 
     return ConversationHandler.END
