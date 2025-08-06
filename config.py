@@ -12,6 +12,7 @@ dotenv.load_dotenv(dotenv_path=".env")
 class Settings(BaseSettings):
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN")
     telegram_bot_id: str = os.getenv("TELEGRAM_BOT_ID")
+    telegram_bot_name: str = os.getenv("TELEGRAM_BOT_NAME")
     telegram_bot_admin_ids: List[int] = None
     firebase_admin_sdk_path: str = os.getenv("FIREBASE_ADMIN_SDK_PATH")
 
