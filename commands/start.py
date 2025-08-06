@@ -14,21 +14,24 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return ConversationHandler.END
 
     user_id = update.message.chat_id
-    is_admin = True if update.message.chat_id in settings.telegram_bot_admin_ids else False
+    is_admin = True if user_id in settings.telegram_bot_admin_ids else False
 
     if not users_db.exists(user_id):
         users_db.create(user_id)
 
     if is_admin:
-        welcome_message = ("👋 سلام مدیر عزیز! به پنل مدیریتی ربات " + settings.telegram_bot_name + " خوش آمدید!\n\n"
+        welcome_message = \
+            (
+            "👋 سلام مدیر عزیز! به پنل مدیریتی ربات " + settings.telegram_bot_name + " خوش آمدید!\n\n"
             "🔧 لطفاً از منوی زیر برای مدیریت کاربران و تنظیمات ربات استفاده کنید."
         )
     else:
         welcome_message = (
-        "🌟 به ربات " + settings.telegram_bot_name + " خوش آمدید!\n\n"
-        "🚀 ما اینجا هستیم تا سریع‌ترین و بی‌نقص‌ترین دسترسی به شبکه جهانی را برای شما به ارمغان بیاوریم.\n\n"
-        "✨ بدون هیچ محدودیت و اختلالی، تجربه‌ای بی‌نظیر در دنیای مجازی را با ما تجربه کنید\n\n"
-        f"🔗 | @{settings.telegram_bot_id}")
+            "🌟 به ربات " + settings.telegram_bot_name + " خوش آمدید!\n\n"
+            "🚀 ما اینجا هستیم تا سریع‌ترین و بی‌نقص‌ترین دسترسی به شبکه جهانی را برای شما به ارمغان بیاوریم.\n\n"
+            "✨ بدون هیچ محدودیت و اختلالی، تجربه‌ای بی‌نظیر در دنیای مجازی را با ما تجربه کنید\n\n"
+            f"🔗 | @{settings.telegram_bot_id}"
+        )
 
 
     await update.message.reply_text(
