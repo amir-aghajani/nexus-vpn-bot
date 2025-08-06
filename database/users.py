@@ -10,7 +10,8 @@ class UserManager:
         user_doc_ref = users_col_ref.document(str(user_id))
         user_doc_ref.set({
             'started': True,
-            'firstStartAt': firestore.SERVER_TIMESTAMP
+            'firstStartAt': firestore.SERVER_TIMESTAMP,
+            'status': 'active',
         })
 
     def exists(self, user_id):

@@ -1,9 +1,7 @@
-from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler
-from config import settings
+
 from commands.start import start_command
-
-
+from config import settings
 
 app = ApplicationBuilder().token(settings.telegram_bot_token).build()
 

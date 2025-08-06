@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from config import settings
 from database import users_db
-from keyboards.start import get_keyboard
+from keyboards import get_start_keyboard
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -19,12 +19,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if not users_db.exists(user_id):
         users_db.create(user_id)
 
-    await update.message.reply_text(text=
+    await update.message.reply_text(
+        text=
         "🌟 به عرصه ارتقای تجربه اینترنتی خود با سرویس‌های V2RAY و کاهش پینگ خوش آمدید!\n\n"
         "🚀 ما اینجا هستیم تا سریع‌ترین و بی‌نقص‌ترین دسترسی به شبکه جهانی را برای شما به ارمغان بیاوریم.\n\n"
         "✨ بدون هیچ محدودیت و اختلالی، تجربه‌ای بی‌نظیر در دنیای مجازی را با ما تجربه کنید\n\n"
         f"🔗 | @{settings.telegram_bot_id}",
-        reply_markup=get_keyboard(is_admin=is_admin)
+        reply_markup=get_start_keyboard(is_admin=is_admin),
     )
 
     return ConversationHandler.END
