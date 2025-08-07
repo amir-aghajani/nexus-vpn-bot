@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardRemove
+from telegram import Update
 from telegram.ext import (
     ConversationHandler,
     CallbackQueryHandler,
@@ -64,21 +64,32 @@ async def send_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         text='در حال ارسال پیام به کاربر ...',
         reply_to_message_id=update.message.message_id
     )
+    try:
+        await context.bot.send_message(
+            text='📬 پیام جدید از ادمین ربات :',
+            chat_id=context.user_data['user_id'],
+        )
 
-    await context.bot.send_message(
-        text='📬 پیام جدید از ادمین ربات :',
-        chat_id=context.user_data['user_id'],
-    )
+        await context.bot.copy_message(
+            from_chat_id=update.message.chat_id,
+            message_id=update.message.message_id,
+            chat_id=context.user_data['user_id'],
+        )
 
-    await context.bot.copy_message(
-        from_chat_id=update.message.chat_id,
-        message_id=update.message.message_id,
-        chat_id=context.user_data['user_id'],
-    )
+        await confirmation.edit_text(
+            text='✅ پیام شما با موفقیت ارسال شد.'
+        )
 
-    await confirmation.edit_text(
-        text='✅ پیام شما با موفقیت ارسال شد.'
-    )
+    except Exception as e:
+        await confirmation.edit_text(
+            text=
+            '❌ مشکلی در ارسال پیام پیش آمده است ❌\n\n'
+            'متن ارور:\n\n\n'
+            f'<code>{str(e)}</code>',
+            parse_mode='html'
+        )
+
+
 
     return ConversationHandler.END
 
