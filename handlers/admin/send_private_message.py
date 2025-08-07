@@ -24,17 +24,20 @@ async def private_message_entry(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def user_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        print(update.message.text)
         user_id = int(update.message.text)
     except ValueError:
         await update.message.reply_text(
-            "شناسه کاربری نامعتبر است. لطفاً یک شناسه کاربری معتبر وارد کنید."
+            "شناسه کاربری نامعتبر است. لطفاً یک شناسه کاربری معتبر وارد کنید.",
+            reply_markup=get_return_to_main_menu_keyboard('شناسه عددی کاربر'),
+            reply_to_message_id=update.message.message_id
         )
+
         return ENTER_USER_ID
 
     if not users_db.exists(str(user_id)):
         await update.message.reply_text(
             text="کاربری با این شناسه وجود ندارد. لطفاً شناسه کاربری معتبر وارد کنید.",
+            reply_markup=get_return_to_main_menu_keyboard('شناسه عددی کاربر'),
             reply_to_message_id=update.message.message_id
         )
 
@@ -45,7 +48,7 @@ async def user_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"لطفا پیام مورد نظر خود را ارسال کنید تا به کاربر ارسال شود",
         reply_to_message_id=update.message.message_id,
-        reply_markup=get_return_to_main_menu_keyboard('من کیرم تو اون هدفگ')
+        reply_markup=get_return_to_main_menu_keyboard('متن پیام مورد نظر')
     )
 
     return ENTER_MESSAGE
