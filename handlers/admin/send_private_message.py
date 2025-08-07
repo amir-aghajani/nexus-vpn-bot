@@ -1,9 +1,14 @@
-from telegram import Update
-from telegram.ext import ConversationHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, ReplyKeyboardRemove
+from telegram.ext import (
+    ConversationHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    filters,
+    ContextTypes
+)
 
 from database import users_db
 from keyboards import get_return_to_main_menu_keyboard
-from utils import return_to_main_menu
 
 ENTER_USER_ID, ENTER_MESSAGE = range(2)
 
@@ -27,7 +32,7 @@ async def user_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = int(update.message.text)
     except ValueError:
         await update.message.reply_text(
-            "شناسه کاربری نامعتبر است. لطفاً یک شناسه کاربری معتبر وارد کنید.",
+            'شناسه کاربری نامعتبر است. لطفاً یک شناسه کاربری معتبر وارد کنید.',
             reply_markup=get_return_to_main_menu_keyboard('شناسه عددی کاربر'),
             reply_to_message_id=update.message.message_id
         )
@@ -36,17 +41,17 @@ async def user_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not users_db.exists(str(user_id)):
         await update.message.reply_text(
-            text="کاربری با این شناسه وجود ندارد. لطفاً شناسه کاربری معتبر وارد کنید.",
+            text='کاربری با این شناسه وجود ندارد. لطفاً شناسه کاربری معتبر وارد کنید.',
             reply_markup=get_return_to_main_menu_keyboard('شناسه عددی کاربر'),
             reply_to_message_id=update.message.message_id
         )
 
         return ENTER_USER_ID
 
-    context.user_data["user_id"] = user_id
+    context.user_data['user_id'] = user_id
 
     await update.message.reply_text(
-        f"لطفا پیام مورد نظر خود را ارسال کنید تا به کاربر ارسال شود",
+        f'لطفا پیام مورد نظر خود را ارسال کنید تا به کاربر ارسال شود',
         reply_to_message_id=update.message.message_id,
         reply_markup=get_return_to_main_menu_keyboard('متن پیام مورد نظر')
     )
@@ -55,8 +60,24 @@ async def user_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "koskesh"
+    confirmation = await update.message.reply_text(
+        text='در حال ارسال پیام به کاربر ...',
+        reply_to_message_id=update.message.message_id
+    )
+
+    await context.bot.send_message(
+        text='📬 پیام جدید از ادمین ربات :',
+        chat_id=context.user_data['user_id'],
+    )
+
+    await context.bot.copy_message(
+        from_chat_id=update.message.chat_id,
+        message_id=update.message.message_id,
+        chat_id=context.user_data['user_id'],
+    )
+
+    await confirmation.edit_text(
+        text='✅ پیام شما با موفقیت ارسال شد.'
     )
 
     return ConversationHandler.END
@@ -64,14 +85,14 @@ async def send_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
 private_message_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(private_message_entry, pattern=r"^admin:sendPrivateMessage")
+        CallbackQueryHandler(private_message_entry, pattern=r'^admin:sendPrivateMessage')
     ],
     states={
         ENTER_USER_ID: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, user_id_handler),
         ],
         ENTER_MESSAGE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, send_message_handler),
+            MessageHandler(filters.ALL, send_message_handler),
         ]
     },
     fallbacks=[],

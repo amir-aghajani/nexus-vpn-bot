@@ -1,4 +1,4 @@
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
 from commands.start import start_command
 from config import settings
@@ -9,6 +9,7 @@ app = ApplicationBuilder().token(settings.telegram_bot_token).build()
 
 app.add_handler(CommandHandler("start", start_command))
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^↩️ بازگشت به منوی اصلی$'), return_to_main_menu))
+app.add_handler(CallbackQueryHandler(return_to_main_menu, pattern=r'^returnToMainMenu$'))
 register_handlers(app)
 
 app.run_polling()
