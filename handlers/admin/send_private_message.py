@@ -10,16 +10,21 @@ ENTER_USER_ID, ENTER_MESSAGE = range(2)
 
 async def private_message_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await update.message.reply_text(
-        "لطفاً شناسه کاربری (User ID) کاربری که می‌خواهید پیام خصوصی ارسال کنید را وارد کنید:",
-        reply_to_message_id=query.message.message_id
+
+    await query.delete_message()
+    await context.bot.send_message(
+        text='📞 لطفاً شناسه عددی (Numeric ID) کاربری که می‌خواهید پیام خصوصی ارسال کنید را وارد کنید',
+        chat_id=query.message.chat.id,
+        reply_markup=get_return_to_main_menu_keyboard('شناسه عددی کاربر')
     )
+    await query.answer()
 
     return ENTER_USER_ID
 
 
 async def user_id_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
+        print(update.message.text)
         user_id = int(update.message.text)
     except ValueError:
         await update.message.reply_text(
@@ -60,13 +65,13 @@ private_message_handler = ConversationHandler(
     ],
     states={
         ENTER_USER_ID: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, private_message_entry),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, user_id_handler),
         ],
         ENTER_MESSAGE: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, send_message_handler),
         ]
     },
-    fallbacks=[
-        MessageHandler(filters.TEXT & filters.Regex(r'^🔙🏠 بازگشت به منوی اصلی 🏠🔙$'), return_to_main_menu)
-    ]
+    fallbacks=[],
+    per_message=False,
+    allow_reentry=True,
 )

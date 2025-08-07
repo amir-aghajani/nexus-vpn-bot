@@ -5,7 +5,7 @@ from config import settings
 from keyboards import get_start_keyboard
 
 
-async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
+async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_admin = True if update.message.chat_id in settings.telegram_bot_admin_ids else False
     await update.message.reply_text(
         text=
