@@ -20,8 +20,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         users_db.create(user_id)
 
     if is_admin:
-        welcome_message = \
-            (
+        welcome_message = (
             "👋 سلام مدیر عزیز! به پنل مدیریتی ربات " + settings.telegram_bot_name + " خوش آمدید!\n\n"
             "🔧 لطفاً از منوی زیر برای مدیریت کاربران و تنظیمات ربات استفاده کنید."
         )

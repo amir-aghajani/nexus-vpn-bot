@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 
 def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
@@ -26,3 +26,10 @@ def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
         ]
 
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_return_to_main_menu_keyboard(placerholder: str = None):
+    keyboard = [
+        [KeyboardButton("↩️ بازگشت به منوی اصلی")]
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True, input_field_placeholder=placerholder)
