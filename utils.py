@@ -30,3 +30,17 @@ class BannedUsers:
 
     def is_user_banned(self, user_id: int) -> bool:
         return user_id in self.load_banned_users()
+
+
+def deep_json_load(obj):
+    if isinstance(obj, dict):
+        return {k: deep_json_load(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [deep_json_load(i) for i in obj]
+    elif isinstance(obj, str):
+        try:
+            return deep_json_load(json.loads(obj))
+        except (json.JSONDecodeError, TypeError):
+            return obj
+    else:
+        return obj

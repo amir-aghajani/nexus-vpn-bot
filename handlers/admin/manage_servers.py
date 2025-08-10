@@ -1,7 +1,8 @@
-from database import servers_db
 from telegram import Update
-from telegram.ext import CallbackQueryHandler, ConversationHandler, ContextTypes
+from telegram.ext import CallbackQueryHandler, ContextTypes
+
 from keyboards import get_manage_servers_keyboard
+from .sanaei_3x_ui import new_sanaei_3x_ui_handler
 
 
 async def manage_servers_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -10,15 +11,6 @@ async def manage_servers_handler(update: Update, context: ContextTypes.DEFAULT_T
     await query.answer()
 
 
-new_3x_ui_handler = ConversationHandler(
-    entry_points=[
-
-    ],
-    states={},
-    fallbacks=[],
-    allow_reentry=True,
-)
-
-
 def register_server_management_handlers(app):
     app.add_handler(CallbackQueryHandler(manage_servers_handler, pattern=r'^admin:manageServers'))
+    app.add_handler(new_sanaei_3x_ui_handler)
