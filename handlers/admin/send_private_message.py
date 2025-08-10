@@ -1,14 +1,9 @@
 from telegram import Update
-from telegram.ext import (
-    ConversationHandler,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-    ContextTypes
-)
+from telegram.ext import (CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler)
 
 from database import users_db
 from keyboards import get_return_to_main_menu_keyboard
+from utils import return_to_main_menu
 
 ENTER_USER_ID, ENTER_MESSAGE = range(2)
 
@@ -103,6 +98,6 @@ private_message_handler = ConversationHandler(
             MessageHandler(filters.ALL, send_message_handler),
         ]
     },
-    fallbacks=[],
+    fallbacks=[MessageHandler(filters.TEXT & filters.Regex(r'^↩️ بازگشت به منوی اصلی$'), return_to_main_menu)],
     allow_reentry=True,
 )

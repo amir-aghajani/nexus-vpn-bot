@@ -4,6 +4,7 @@ from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
 from data import banned_users
 from database import users_db
 from keyboards import get_return_to_main_menu_keyboard
+from utils import return_to_main_menu
 from .helpers import user_id_helper
 
 ENTER_USER_ID = range(1)
@@ -70,6 +71,6 @@ manage_user_status_handler = ConversationHandler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, change_user_status_handler)
         ],
     },
-    fallbacks=[],
+    fallbacks=[MessageHandler(filters.TEXT & filters.Regex(r'^↩️ بازگشت به منوی اصلی$'), return_to_main_menu)],
     allow_reentry=True,
 )
