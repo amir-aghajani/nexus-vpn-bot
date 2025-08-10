@@ -46,18 +46,19 @@ def get_manage_servers_keyboard(servers: list = None) -> InlineKeyboardMarkup:
     ]
     if type(servers) == list and len(servers) > 0:
         for server in servers:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(server['status'], callback_data=f'noneFunctioningButton'),
-                    InlineKeyboardButton('⚙️', callback_data=f'admin:manageServers:settings:{server["id"]}'),
-                    InlineKeyboardButton(server['panelType'], callback_data=f'noneFunctioningButton'),
-                    InlineKeyboardButton(f'{server['flag']} {server['name']}', callback_data=f'noneFunctioningButton')
-                ]
-            )
+            keyboard.append([
+                InlineKeyboardButton(server['status'], callback_data=f'noneFunctioningButton'),
+                InlineKeyboardButton('⚙️', callback_data=f'admin:manageServers:settings:{server["id"]}'),
+                InlineKeyboardButton(server['panelType'], callback_data=f'noneFunctioningButton'),
+                InlineKeyboardButton(f'{server['flag']} {server['name']}', callback_data=f'noneFunctioningButton')
+            ])
     else:
         keyboard.append([InlineKeyboardButton('❌ هیچ سروری وجود ندارد', callback_data='noneFunctioningButton')])
 
-    keyboard.append([InlineKeyboardButton('➕ افزودن سرور 3X-UI', callback_data='admin:addServer:3X-UI'), InlineKeyboardButton('➕ افزودن سرور مرزبان', callback_data='admin:addServer:Marzban')])
+    keyboard.append([
+        InlineKeyboardButton('➕ افزودن سرور مرزبان', callback_data='admin:addServer:Marzban'),
+        InlineKeyboardButton('➕ افزودن سرور 3X-UI', callback_data='admin:addServer:3X-UI'),
+    ])
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به منوی اصلی', callback_data='returnToMainMenu')])
 
     return InlineKeyboardMarkup(keyboard)

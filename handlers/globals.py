@@ -1,5 +1,5 @@
-from telegram import ReplyKeyboardRemove, Update
-from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, filters, MessageHandler
+from telegram import InlineKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
 from config import settings
 from database import users_db
@@ -63,6 +63,21 @@ async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 
+async def return_to_main_menu_inline(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    is_admin = True if update.effective_user.id in settings.telegram_bot_admin_ids else False
+
+    await query.edit_message_text(
+        text=
+        "🏠 شما به منو اصلی بازگشتید 🏠\n\n"
+        "🌟 چه کاری می‌توانم برای شما انجام دهم؟ 🤖",
+        reply_markup=get_start_keyboard(is_admin=is_admin),
+    )
+
+    return ConversationHandler.END
+
+
 return_to_main_menu_filter = filters.Regex(r'^↩️ بازگشت به منوی اصلی$')
 start_command_handler = CommandHandler("start", start_command)
 return_to_main_menu_handler = MessageHandler(filters.TEXT & return_to_main_menu_filter, return_to_main_menu)
+return_to_main_menu_inline_handler = CallbackQueryHandler(return_to_main_menu_inline, pattern=r'^returnToMainMenu')
