@@ -2,3 +2,4 @@
 .venv
 .env
 firebase_admin_sdk.json
+banned_users.json

@@ -1,4 +1,7 @@
-from telegram import Update, ReplyKeyboardRemove
+import json
+from pathlib import Path
+
+from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from config import settings
@@ -22,3 +25,32 @@ async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
 
     return ConversationHandler.END
+
+
+class BannedUsers:
+    def __init__(self, file_path="banned_users.json"):
+        self.file_path = Path(file_path)
+
+    def load_banned_users(self):
+        if not self.file_path.exists():
+            return set()
+        with open(self.file_path, "r", encoding="utf-8") as f:
+            return set(json.load(f))  # fast lookups with set
+
+    def save_banned_users(self, banned_users):
+        with open(self.file_path, "w", encoding="utf-8") as f:
+            json.dump(list(banned_users), f, indent=2)
+
+    def ban_user(self, user_id: int):
+        banned_users = self.load_banned_users()
+        banned_users.add(user_id)
+        self.save_banned_users(banned_users)
+
+    def unban_user(self, user_id: int):
+        banned_users = self.load_banned_users()
+        banned_users.discard(user_id)
+        self.save_banned_users(banned_users)
+
+    def is_user_banned(self, user_id: int) -> bool:
+        banned_users = self.load_banned_users()
+        return user_id in banned_users

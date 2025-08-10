@@ -88,8 +88,6 @@ async def send_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             parse_mode='MarkDownV2'
         )
 
-
-
     return ConversationHandler.END
 
 
