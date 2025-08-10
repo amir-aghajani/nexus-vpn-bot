@@ -1,4 +1,4 @@
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, filters, MessageHandler
 
 from commands.start import start_command
 from config import settings

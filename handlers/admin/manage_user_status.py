@@ -1,15 +1,10 @@
 from telegram import Update
-from telegram.ext import (
-    ConversationHandler,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-    ContextTypes
-)
+from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
-from .helpers import user_id_helper
+from data import banned_users
 from database import users_db
 from keyboards import get_return_to_main_menu_keyboard
+from .helpers import user_id_helper
 
 ENTER_USER_ID = range(1)
 
@@ -53,6 +48,7 @@ async def change_user_status_handler(update: Update, context: ContextTypes.DEFAU
 
     try:
         users_db.change_status(user_id, context.user_data['action'])
+        banned_users.modify_user_status(user_id, context.user_data['action'])
         await confirmation.edit_text(text=text)
     except Exception as e:
         await confirmation.edit_text(
