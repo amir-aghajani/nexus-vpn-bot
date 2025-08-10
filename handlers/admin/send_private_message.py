@@ -3,7 +3,7 @@ from telegram.ext import (CallbackQueryHandler, ContextTypes, ConversationHandle
 
 from database import users_db
 from keyboards import get_return_to_main_menu_keyboard
-from utils import return_to_main_menu
+from ..globals import return_to_main_menu_filter, return_to_main_menu_handler, start_command_handler
 
 ENTER_USER_ID, ENTER_MESSAGE = range(2)
 
@@ -92,12 +92,12 @@ private_message_handler = ConversationHandler(
     ],
     states={
         ENTER_USER_ID: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, user_id_handler),
+            MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, user_id_handler),
         ],
         ENTER_MESSAGE: [
-            MessageHandler(filters.ALL, send_message_handler),
+            MessageHandler(filters.ALL & ~filters.COMMAND & ~return_to_main_menu_filter, send_message_handler),
         ]
     },
-    fallbacks=[MessageHandler(filters.TEXT & filters.Regex(r'^↩️ بازگشت به منوی اصلی$'), return_to_main_menu)],
+    fallbacks=[start_command_handler, return_to_main_menu_handler],
     allow_reentry=True,
 )

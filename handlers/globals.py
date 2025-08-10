@@ -63,5 +63,6 @@ async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 
+return_to_main_menu_filter = filters.Regex(r'^↩️ بازگشت به منوی اصلی$')
 start_command_handler = CommandHandler("start", start_command)
-return_to_main_menu_handler = MessageHandler(filters.TEXT & filters.Regex(r'^↩️ بازگشت به منوی اصلی$'), return_to_main_menu)
+return_to_main_menu_handler = MessageHandler(filters.TEXT & return_to_main_menu_filter, return_to_main_menu)
