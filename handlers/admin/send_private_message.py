@@ -83,10 +83,9 @@ async def send_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         await confirmation.edit_text(
             text=
-            '❌ مشکلی در ارسال پیام پیش آمده است ❌\n\n'
-            'متن ارور:\n\n\n'
-            f'<code>{str(e)}</code>',
-            parse_mode='html'
+            '❌ مشکلی در ارسال پیام پیش آمده است ❌\n'
+            f'```ErrorMessage\n{str(e)}```',
+            parse_mode='MarkDownV2'
         )
 
 
