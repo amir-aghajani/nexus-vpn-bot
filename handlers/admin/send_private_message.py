@@ -104,6 +104,5 @@ private_message_handler = ConversationHandler(
         ]
     },
     fallbacks=[],
-    per_message=False,
     allow_reentry=True,
 )

@@ -71,6 +71,5 @@ manage_user_status_handler = ConversationHandler(
         ],
     },
     fallbacks=[],
-    per_message=False,
     allow_reentry=True,
 )

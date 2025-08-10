@@ -7,7 +7,7 @@ from utils import return_to_main_menu
 
 app = ApplicationBuilder().token(settings.telegram_bot_token).build()
 
-app.add_handler(CommandHandler("start", start_command))
+app.add_handler(CommandHandler("start", start_command), group=0)
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex(r'^↩️ بازگشت به منوی اصلی$'), return_to_main_menu))
 app.add_handler(CallbackQueryHandler(return_to_main_menu, pattern=r'^returnToMainMenu$'))
 register_handlers(app)

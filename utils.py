@@ -11,6 +11,8 @@ from keyboards import get_start_keyboard
 async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_admin = True if update.message.chat_id in settings.telegram_bot_admin_ids else False
 
+    print(str(context.user_data))
+
     delete_keyboard_message = await update.message.reply_text(
         text="لطفا صبر کنید...",
         reply_markup=ReplyKeyboardRemove(),
