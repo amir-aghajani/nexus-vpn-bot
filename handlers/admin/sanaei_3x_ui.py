@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
+from api_client.sanaei_3x_ui import SanaeiXuiClient
 from handlers.globals import return_to_main_menu_filter
 from keyboards import get_return_to_main_menu_keyboard
 
@@ -27,11 +28,11 @@ async def handler_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def server_name_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    context.user_data['user_id'] = message.text
+    context.user_data['serverName'] = message.text
 
     await message.reply_text(
-        text='✅ نام سرور با موفقیت ثبت شد.\n\n'
-             '▪️ظرفیت تعداد ساخت کانفیگ رو برای سرورت مشخص کن ( عدد باشه )',
+        text=' مرحله دوم:\n\n'
+             '♾️️ لطفا ظرفیت تعداد ساخت کانفیگ را برای سرور وارد کنید ( به صورت عددی )',
         reply_to_message_id=message.message_id,
         reply_markup=get_return_to_main_menu_keyboard('محدودیت سرور')
     )
@@ -40,7 +41,118 @@ async def server_name_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def server_limit_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pass
+    message = update.message
+    try:
+        limit = int(message.text)
+        context.user_data['serverConfigLimit'] = limit
+    except ValueError:
+        await message.reply_text(
+            text='❌ لطفاً یک عدد معتبر وارد کنید.',
+            reply_to_message_id=message.message_id,
+            reply_markup=get_return_to_main_menu_keyboard('محدودیت سرور')
+        )
+        return ENTER_SERVER_LIMIT
+
+    await message.reply_text(
+        text='️▪️ مرحله سوم:\n\n'
+             '♾️️ لطفا ایموجی مربوط به سرور را ارسال کنید',
+        reply_to_message_id=message.message_id,
+        reply_markup=get_return_to_main_menu_keyboard('محدودیت سرور')
+    )
+
+    return ENTER_SERVER_EMOJI
+
+
+async def server_emoji_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    emoji = message.text
+
+    if len(emoji) > 1:
+        await message.reply_text(
+            text='❌ لطفاً فقط یک ایموجی ارسال کنید.',
+            reply_to_message_id=message.message_id,
+            reply_markup=get_return_to_main_menu_keyboard('ایموجی سرور')
+        )
+        return ENTER_SERVER_EMOJI
+
+    context.user_data['serverEmoji'] = emoji
+
+    await message.reply_text(
+        text='️▪️ مرحله چهارم:\n\n'
+             '️🔗 لطفا آدرس پنل 3x-ui را به صورت مثال های زیر وارد کنید (به صورت URL)\n\n'
+             '❕ https://yourdomain.com:54321\n'
+             '❕ https://yourdomain.com:54321/path\n'
+             '❗️ http://125.12.12.36:54321\n'
+             '❗️ http://125.12.12.36:54321/path\n\n'
+             'اگر سرور مورد نظر با دامنه و ssl هست از مثال (❕) استفاده کنید\n'
+             'اگر سرور مورد نظر با ip و بدون ssl هست از مثال (❗️) استفاده کنید\n',
+        reply_to_message_id=message.message_id,
+        reply_markup=get_return_to_main_menu_keyboard('آدرس پنل')
+    )
+
+    return ENTER_PANEL_URL
+
+
+async def panel_url_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    panel_url = message.text
+    context.user_data['serverPanelUrl'] = panel_url
+
+    await message.reply_text(
+        text='️▪️ مرحله پنجم:\n\n'
+             '👤 لطفا نام کاربری پنل 3x-ui را وارد کنید',
+        reply_to_message_id=message.message_id,
+        reply_markup=get_return_to_main_menu_keyboard('نام کاربری پنل')
+    )
+
+    return ENTER_PANEL_USERNAME
+
+
+async def panel_username_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    panel_username = message.text
+    context.user_data['serverPanelUsername'] = panel_username
+
+    await message.reply_text(
+        text='️▪️ مرحله ششم:\n\n'
+             '🔑 لطفا رمز عبور پنل 3x-ui را وارد کنید',
+        reply_to_message_id=message.message_id,
+        reply_markup=get_return_to_main_menu_keyboard('رمز عبور پنل')
+    )
+
+    return ENTER_PANEL_PASSWORD
+
+
+async def panel_password_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    panel_password = message.text
+    context.user_data['serverPanelPassword'] = panel_password
+
+    sanaei_client = SanaeiXuiClient(
+        panel_url=context.user_data['serverPanelUrl'],
+        username=context.user_data['serverPanelUsername'],
+        password=context.user_data['serverPanelPassword']
+    )
+
+    if not sanaei_client.test_client_connection():
+        await message.reply_text(
+            text=
+            '❌ مشکلی در برقراری ارتباط با سرور پیش آمده است ❌\n\n'
+            'لطفا مجددا آدرس پنل را وارد کنید',
+            reply_to_message_id=message.message_id,
+            parse_mode='MarkDownV2',
+            reply_markup=get_return_to_main_menu_keyboard('آدرس پنل')
+        )
+
+        return ENTER_PANEL_URL
+
+    await message.reply_text(
+        text='✅ سرور با موفقیت اضافه شد.\n\n',
+        reply_to_message_id=message.message_id,
+        reply_markup=get_return_to_main_menu_keyboard()
+    )
+
+    return ConversationHandler.END
 
 
 new_sanaei_3x_ui_handler = ConversationHandler(
@@ -53,6 +165,18 @@ new_sanaei_3x_ui_handler = ConversationHandler(
         ],
         ENTER_SERVER_LIMIT: [
             MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, server_limit_handler)
+        ],
+        ENTER_SERVER_EMOJI: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, server_emoji_handler)
+        ],
+        ENTER_PANEL_URL: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, panel_url_handler)
+        ],
+        ENTER_PANEL_USERNAME: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, panel_username_handler)
+        ],
+        ENTER_PANEL_PASSWORD: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, panel_password_handler)
         ]
     },
     fallbacks=[],
