@@ -1,3 +1,3 @@
-from utils import BannedUsers
+from utils import UnifiedStorage
 
-banned_users = BannedUsers()
+json_storage = UnifiedStorage()

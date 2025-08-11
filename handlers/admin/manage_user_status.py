@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
-from data import banned_users
+from data import json_storage
 from database import users_db
 from keyboards import get_return_to_main_menu_keyboard
 from .helpers import user_id_helper
@@ -49,7 +49,7 @@ async def change_user_status_handler(update: Update, context: ContextTypes.DEFAU
 
     try:
         users_db.change_status(user_id, context.user_data['action'])
-        banned_users.modify_user_status(user_id, context.user_data['action'])
+        json_storage.modify_user_status(user_id, context.user_data['action'])
         await confirmation.edit_text(text=text)
     except Exception as e:
         await confirmation.edit_text(
