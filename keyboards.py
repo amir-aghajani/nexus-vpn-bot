@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, CopyTextButton
 
 
 def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
@@ -49,7 +49,7 @@ def get_manage_servers_keyboard(servers: list = None) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(server['status'], callback_data=f'noneFunctioningButton'),
                 InlineKeyboardButton('⚙️', callback_data=f'admin:manageServers:settings:{server["id"]}'),
                 InlineKeyboardButton(server['panelType'], callback_data=f'noneFunctioningButton'),
-                InlineKeyboardButton(f'{server['flag']} {server['name']}', callback_data=f'noneFunctioningButton')
+                InlineKeyboardButton(f'{server['emoji']} {server['name']}', callback_data=f'noneFunctioningButton')
             ])
     else:
         keyboard.append([InlineKeyboardButton('❌ هیچ سروری وجود ندارد', callback_data='noneFunctioningButton')])
@@ -60,4 +60,33 @@ def get_manage_servers_keyboard(servers: list = None) -> InlineKeyboardMarkup:
     ])
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به منوی اصلی', callback_data='returnToMainMenu')])
 
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_single_server_keyboard(server: dict) -> InlineKeyboardMarkup:
+    keyboard = [
+        [
+            InlineKeyboardButton(' آدرس پنل', callback_data='noneFunctioningButton'),
+        ],
+        [
+            InlineKeyboardButton(server['panelUrl'], callback_data='noneFunctioningButton'),
+        ],
+        [
+            InlineKeyboardButton(server['id'], copy_text=CopyTextButton(text=server['id'])),
+            InlineKeyboardButton('🗂 آیدی سرور', callback_data='noneFunctioningButton'),
+        ],
+        [
+            InlineKeyboardButton(server['name'], callback_data='noneFunctioningButton'),
+            InlineKeyboardButton('❕ نام سرور', callback_data='noneFunctioningButton'),
+        ],
+        [
+            InlineKeyboardButton(server['emoji'], callback_data='noneFunctioningButton'),
+            InlineKeyboardButton('📋 ایموجی سرور', callback_data='noneFunctioningButton'),
+        ],
+        [
+            InlineKeyboardButton(server['panelType'], callback_data='noneFunctioningButton'),
+            InlineKeyboardButton('نوع پنل', callback_data='noneFunctioningButton'),
+        ],
+        [InlineKeyboardButton('↩️ بازگشت', callback_data='admin:manageServers')]
+    ]
     return InlineKeyboardMarkup(keyboard)

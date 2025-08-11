@@ -143,10 +143,11 @@ async def panel_password_handler(update: Update, context: ContextTypes.DEFAULT_T
         'name': context.user_data['serverName'],
         'emoji': context.user_data['serverEmoji'],
         'configLimit': context.user_data['serverConfigLimit'],
-        'panel_url': context.user_data['serverPanelUrl'],
-        'panel_username': context.user_data['serverPanelUsername'],
-        'panel_password': context.user_data['serverPanelPassword'],
-        'panel_type': '3x-ui',
+        'panelUrl': context.user_data['serverPanelUrl'],
+        'panelUsername': context.user_data['serverPanelUsername'],
+        'panelPassword': context.user_data['serverPanelPassword'],
+        'status': 'disabled',
+        'panelType': '3x-ui',
     }
 
     server_id = servers_db.create(server_data)
