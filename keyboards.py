@@ -8,7 +8,6 @@ def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
             [InlineKeyboardButton('🔑 اطلاعات کاربر', callback_data='admin:showUserInfo')],
             [InlineKeyboardButton('💵 افزایش موجودی', callback_data='admin:increaseUserFunds'), InlineKeyboardButton('💸 کاهش موجودی', callback_data='admin:decreaseUserFunds')],
             [InlineKeyboardButton('❌ مسدود کردن کاربر', callback_data='admin:banUser'), InlineKeyboardButton('✅ آزاد کردن کاربر', callback_data='admin:unbanUser')],
-            [InlineKeyboardButton('🔎 جستجو کانفیگ کاربر', callback_data='admin:findUserConfig')],
             [InlineKeyboardButton('🚦 مدیریت و تنظیمات سرورها', callback_data='admin:manageServers')],
             [InlineKeyboardButton('🗂 مدیریت دسته ها', callback_data='admin:manageCategories')],
             [InlineKeyboardButton('🪣 مدیریت پلن ها', callback_data='admin:managePlans')],

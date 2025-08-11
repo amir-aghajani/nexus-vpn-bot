@@ -103,13 +103,11 @@ class UnifiedStorage:
             raise ValueError(f"Unknown action: {action}")
 
     # Server Methods
-    def add_server(self, server_data: Dict[str, Any]) -> str:
+    def add_server(self, server_data: Dict[str, Any]):
         servers = self.storage.get_component("servers", [])
-        server_id = str(len(servers) + 1)
-        server_entry = {"id": server_id, **server_data}
-        servers.append(server_entry)
+        servers.append(server_data)
         self.storage.set_component("servers", servers)
-        return server_id
+        return
 
     def get_server(self, server_id: str) -> Optional[Dict[str, Any]]:
         servers = self.storage.get_component("servers", [])

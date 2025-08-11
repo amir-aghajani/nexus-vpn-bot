@@ -8,7 +8,10 @@ class ServerManager:
     def create(self, server_data):
         servers_col_ref = self.db.collection('servers')
         server_doc_ref = servers_col_ref.document()
-        server_doc_ref.set(server_data)
+        server_doc_ref.set({
+            **server_data,
+            'createdAt': firestore.SERVER_TIMESTAMP,
+        })
         return server_doc_ref.id
 
     def exists(self, server_id):
