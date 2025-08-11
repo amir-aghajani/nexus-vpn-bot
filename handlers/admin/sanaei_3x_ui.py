@@ -2,6 +2,8 @@ from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
 from api_client.sanaei_3x_ui import SanaeiXuiClient
+from data import json_storage
+from database import servers_db
 from handlers.globals import return_to_main_menu_filter
 from keyboards import get_return_to_main_menu_keyboard
 
@@ -65,17 +67,8 @@ async def server_limit_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def server_emoji_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    emoji = message.text
 
-    if len(emoji) > 1:
-        await message.reply_text(
-            text='❌ لطفاً فقط یک ایموجی ارسال کنید.',
-            reply_to_message_id=message.message_id,
-            reply_markup=get_return_to_main_menu_keyboard('ایموجی سرور')
-        )
-        return ENTER_SERVER_EMOJI
-
-    context.user_data['serverEmoji'] = emoji
+    context.user_data['serverEmoji'] = message.text
 
     await message.reply_text(
         text='️▪️ مرحله چهارم:\n\n'
@@ -145,6 +138,19 @@ async def panel_password_handler(update: Update, context: ContextTypes.DEFAULT_T
         )
 
         return ENTER_PANEL_URL
+
+    server_data = {
+        'name': context.user_data['serverName'],
+        'emoji': context.user_data['serverEmoji'],
+        'configLimit': context.user_data['serverConfigLimit'],
+        'panel_url': context.user_data['serverPanelUrl'],
+        'panel_username': context.user_data['serverPanelUsername'],
+        'panel_password': context.user_data['serverPanelPassword'],
+        'panel_type': '3x-ui',
+    }
+
+    server_id = servers_db.create(server_data)
+    json_storage.add_server({**server_data, 'id': server_id})
 
     await message.reply_text(
         text='✅ سرور با موفقیت اضافه شد.\n\n',
