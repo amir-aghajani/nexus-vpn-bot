@@ -9,6 +9,7 @@ class ServerManager:
         servers_col_ref = self.db.collection('servers')
         server_doc_ref = servers_col_ref.document()
         server_doc_ref.set(server_data)
+        return server_doc_ref.id
 
     def exists(self, server_id):
         servers_col_ref = self.db.collection('servers')
