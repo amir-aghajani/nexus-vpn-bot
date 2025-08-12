@@ -8,12 +8,11 @@ from .sanaei_3x_ui import new_sanaei_3x_ui_handler
 
 async def manage_servers_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    servers = json_storage.get_all_servers()
     await query.edit_message_text(
         text='☑️ به بخش مدیریت سرور ها خوش آمدید',
-        reply_markup=get_manage_servers_keyboard(servers=servers)
+        reply_markup=get_manage_servers_keyboard(servers=json_storage.get('servers') or [])
     )
-    await query.answer('مدیریت سرور ها')
+    await query.answer()
 
 
 async def manage_server_settings_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -22,7 +21,7 @@ async def manage_server_settings_handler(update: Update, context: ContextTypes.D
     server_id = data[3] if len(data) > 2 else None
 
     if server_id:
-        server = json_storage.get_server(server_id)
+        server = json_storage.get('servers', server_id)
         if not server:
             await query.answer('سرور یافت نشد', show_alert=True)
             return

@@ -11,7 +11,7 @@ ENTER_CATEGORY_NAME = range(1)
 ENTER_NEW_NAME = range(1)
 
 
-async def manage_categories_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def manage_categories(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
 
     await query.delete_message()
@@ -140,4 +140,4 @@ def register_category_management_handlers(app):
     app.add_handler(create_category_conv_handler)
     app.add_handler(rename_category_conv_handler)
     app.add_handler(CallbackQueryHandler(delete_category_handler, pattern=r'^admin:deleteCategory:'))
-    app.add_handler(CallbackQueryHandler(manage_categories_start, pattern=r'^admin:manageCategories'))
+    app.add_handler(CallbackQueryHandler(manage_categories, pattern=r'^admin:manageCategories'))
