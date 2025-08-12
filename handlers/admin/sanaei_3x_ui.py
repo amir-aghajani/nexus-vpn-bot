@@ -151,7 +151,7 @@ async def panel_password_handler(update: Update, context: ContextTypes.DEFAULT_T
     }
 
     server_id = servers_db.create(server_data)
-    json_storage.add_server({**server_data, 'id': server_id})
+    json_storage.add('servers', {**server_data, 'id': server_id})
 
     await message.reply_text(
         text='✅ سرور با موفقیت اضافه شد.\n\n',
