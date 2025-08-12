@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
 from config import settings
@@ -77,7 +77,12 @@ async def return_to_main_menu_inline(update: Update, context: ContextTypes.DEFAU
     return ConversationHandler.END
 
 
+async def non_funcitoning_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.callback_query.answer('این دکمه قرار نیست کاری انجام بده :)')
+
+
 return_to_main_menu_filter = filters.Regex(r'^↩️ بازگشت به منوی اصلی$')
 start_command_handler = CommandHandler("start", start_command)
 return_to_main_menu_handler = MessageHandler(filters.TEXT & return_to_main_menu_filter, return_to_main_menu)
 return_to_main_menu_inline_handler = CallbackQueryHandler(return_to_main_menu_inline, pattern=r'^returnToMainMenu')
+non_functioning_query_handler = CallbackQueryHandler(non_funcitoning_button_handler, pattern=r'^noneFunctioningButton')
