@@ -83,58 +83,84 @@ class UnifiedStorage:
     def __init__(self, file_path: str = "data.json"):
         self.storage = JSONStorage(file_path)
 
-    def add(self, component_name: str, item_data: Any):
-        self.storage.add_to_list(component_name, item_data)
+    def _ensure_list(self, component_name: str) -> list:
+        data = self.storage.get_component(component_name, [])
+        if not isinstance(data, list):
+            data = []
+            self.storage.set_component(component_name, data)
+        return data
 
-    def remove(self, component_name: str, identifier: Any, id_key: str = "id"):
-        current_data = self.storage.get_component(component_name, [])
+    def _find_index_by_id(self, items: list, identifier: Any, id_key: str) -> int:
+        for i, it in enumerate(items):
+            if isinstance(it, dict) and it.get(id_key) == identifier:
+                return i
+        return -1
 
-        if not current_data:
+    def _is_object_list(self, items: list) -> bool:
+        return any(isinstance(it, dict) for it in items)
+
+    def add(self, component_name: str, item_data: Any, id_key: str = "id", dedupe: bool = True):
+        items = self._ensure_list(component_name)
+        if isinstance(item_data, dict) and id_key in item_data and dedupe:
+            idx = self._find_index_by_id(items, item_data[id_key], id_key)
+            if idx >= 0:
+                items[idx].update(item_data)
+            else:
+                items.append(item_data)
+        else:
+            if item_data not in items:
+                items.append(item_data)
+        self.storage.set_component(component_name, items)
+
+    def remove(self, component_name: str, identifier: Any, id_key: str = "id") -> bool:
+        items = self._ensure_list(component_name)
+        if not items:
+            return False
+        if self._is_object_list(items) and identifier is not None:
+            new_items = [it for it in items if not (isinstance(it, dict) and it.get(id_key) == identifier)]
+            changed = len(new_items) < len(items)
+            if changed:
+                self.storage.set_component(component_name, new_items)
+            return changed
+        else:
+            if identifier in items:
+                items.remove(identifier)
+                self.storage.set_component(component_name, items)
+                return True
             return False
 
-        if isinstance(current_data, list):
-            if len(current_data) > 0 and isinstance(current_data[0], dict):
-                new_data = [item for item in current_data if item.get(id_key) != identifier]
-                self.storage.set_component(component_name, new_data)
-                return len(new_data) < len(current_data)
-            else:
-                # Simple list - remove value directly
-                if identifier in current_data:
-                    current_data.remove(identifier)
-                    self.storage.set_component(component_name, current_data)
-                    return True
-        return False
-
     def get(self, component_name: str, identifier: Any = None, id_key: str = "id"):
-        data = self.storage.get_component(component_name, [] if component_name != "settings" else {})
-
+        data = self.storage.get_component(component_name, {} if component_name == "settings" else [])
         if identifier is None:
             return data
-
-        if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
-            for item in data:
-                if item.get(id_key) == identifier:
-                    return item
-            return None
-        elif isinstance(data, dict):
+        if isinstance(data, dict):
             return data.get(identifier)
-        else:
-            return identifier if identifier in data else None
+        if isinstance(data, list):
+            if self._is_object_list(data):
+                for it in data:
+                    if isinstance(it, dict) and it.get(id_key) == identifier:
+                        return it
+                return None
+            else:
+                return identifier if identifier in data else None
+        return None
 
-    def update(self, component_name: str, identifier: Any, updates: Dict[str, Any], id_key: str = "id"):
+    def update(self, component_name: str, identifier: Any, updates: Dict[str, Any], id_key: str = "id") -> bool:
         if component_name == "settings":
             self.storage.update_component("settings", {identifier: updates})
             return True
-
-        current_data = self.storage.get_component(component_name, [])
-
-        if isinstance(current_data, list):
-            for i, item in enumerate(current_data):
-                if isinstance(item, dict) and item.get(id_key) == identifier:
-                    current_data[i].update(updates)
-                    self.storage.set_component(component_name, current_data)
-                    return True
-        return False
+        items = self._ensure_list(component_name)
+        if not items:
+            return False
+        if self._is_object_list(items):
+            idx = self._find_index_by_id(items, identifier, id_key)
+            if idx >= 0 and isinstance(items[idx], dict):
+                items[idx].update(updates)
+                self.storage.set_component(component_name, items)
+                return True
+            return False
+        else:
+            return False
 
     def set(self, component_name: str, data: Any):
         self.storage.set_component(component_name, data)
