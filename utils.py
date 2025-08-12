@@ -80,7 +80,7 @@ class JSONStorage:
 
 
 class UnifiedStorage:
-    def __init__(self, file_path: str = "data.json"):
+    def __init__(self, file_path: str = "data/data.json"):
         self.storage = JSONStorage(file_path)
 
     def _ensure_list(self, component_name: str) -> list:
