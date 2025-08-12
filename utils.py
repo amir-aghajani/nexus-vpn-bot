@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 class JSONStorage:
@@ -93,7 +93,7 @@ class UnifiedStorage:
 
     def get_banned_users(self) -> List[int]:
         return self.storage.get_component("banned_users", [])
-    
+
     def modify_user_status(self, user_id: int, action: str):
         if action == "banUser":
             self.add_banned_user(user_id)
@@ -157,3 +157,10 @@ def deep_json_load(obj):
             return obj
     else:
         return obj
+
+
+server_status = {
+    "enabled": "✅ فعال",
+    "disabled": "❌ غیرفعال",
+    "maintenance": "🔧 در حال نگهداری"
+}

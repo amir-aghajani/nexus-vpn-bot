@@ -1,4 +1,6 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, CopyTextButton
+from telegram import CopyTextButton, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+
+from utils import server_status
 
 
 def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
@@ -46,7 +48,7 @@ def get_manage_servers_keyboard(servers: list = None) -> InlineKeyboardMarkup:
     if type(servers) == list and len(servers) > 0:
         for server in servers:
             keyboard.append([
-                InlineKeyboardButton(server['status'], callback_data=f'noneFunctioningButton'),
+                InlineKeyboardButton(server_status[server['status']], callback_data=f'noneFunctioningButton'),
                 InlineKeyboardButton('⚙️', callback_data=f'admin:manageServers:settings:{server["id"]}'),
                 InlineKeyboardButton(server['panelType'], callback_data=f'noneFunctioningButton'),
                 InlineKeyboardButton(f'{server['emoji']} {server['name']}', callback_data=f'noneFunctioningButton')
@@ -84,9 +86,30 @@ def get_single_server_keyboard(server: dict) -> InlineKeyboardMarkup:
             InlineKeyboardButton('📋 ایموجی سرور', callback_data='noneFunctioningButton'),
         ],
         [
-            InlineKeyboardButton(server['panelType'], callback_data='noneFunctioningButton'),
-            InlineKeyboardButton('نوع پنل', callback_data='noneFunctioningButton'),
+            InlineKeyboardButton(server_status[server['status']], callback_data='noneFunctioningButton'),
+            InlineKeyboardButton('وضعیت', callback_data='noneFunctioningButton'),
         ],
         [InlineKeyboardButton('↩️ بازگشت', callback_data='admin:manageServers')]
     ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_manage_categories_keyboard(categories: list = None) -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton('نام دسته', callback_data='noneFunctioningButton')],
+        [InlineKeyboardButton('توضیحات دسته', callback_data='noneFunctioningButton')],
+    ]
+
+    if type(categories) == list and len(categories) > 0:
+        for category in categories:
+            keyboard.append([
+                InlineKeyboardButton(category['name'], callback_data=f'admin:manageCategories:rename:{category["id"]}'),
+                InlineKeyboardButton('❌', callback_data=f'admin:manageCategories:remove:{category["id"]}')
+            ])
+    else:
+        keyboard.append([InlineKeyboardButton('❌ هیچ دسته ای وجود ندارد', callback_data='noneFunctioningButton')])
+
+    keyboard.append([InlineKeyboardButton('➕ افزودن دسته جدید', callback_data='admin:addCategory')])
+    keyboard.append([InlineKeyboardButton('↩️ بازگشت به منوی اصلی', callback_data='returnToMainMenu')])
+
     return InlineKeyboardMarkup(keyboard)
