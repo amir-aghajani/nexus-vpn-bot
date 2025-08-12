@@ -94,22 +94,22 @@ def get_single_server_keyboard(server: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def get_manage_categories_keyboard(categories: list = None) -> InlineKeyboardMarkup:
+def manage_categories_keyboard(categories: list = None) -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton('نام دسته', callback_data='noneFunctioningButton')],
-        [InlineKeyboardButton('توضیحات دسته', callback_data='noneFunctioningButton')],
+        [InlineKeyboardButton('حذف دسته بندی', callback_data='noneFunctioningButton'),
+         InlineKeyboardButton('نام دسته بندی', callback_data='noneFunctioningButton')],
     ]
 
     if type(categories) == list and len(categories) > 0:
         for category in categories:
             keyboard.append([
-                InlineKeyboardButton(category['name'], callback_data=f'admin:manageCategories:rename:{category["id"]}'),
-                InlineKeyboardButton('❌', callback_data=f'admin:manageCategories:remove:{category["id"]}')
+                InlineKeyboardButton('❌', callback_data=f'admin:deleteCategory:{category["id"]}'),
+                InlineKeyboardButton(category['name'], callback_data=f'admin:renameCategory:{category["id"]}'),
             ])
     else:
-        keyboard.append([InlineKeyboardButton('❌ هیچ دسته ای وجود ندارد', callback_data='noneFunctioningButton')])
+        keyboard.append([InlineKeyboardButton('❌ هیچ دسته بندی ای وجود ندارد', callback_data='noneFunctioningButton')])
 
-    keyboard.append([InlineKeyboardButton('➕ افزودن دسته جدید', callback_data='admin:addCategory')])
+    keyboard.append([InlineKeyboardButton('➕ افزودن دسته جدید', callback_data='admin:createCategory')])
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به منوی اصلی', callback_data='returnToMainMenu')])
 
     return InlineKeyboardMarkup(keyboard)

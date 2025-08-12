@@ -13,12 +13,12 @@ class CategoriesDatabase:
 
         return {'id': doc_snapshot.id, **doc_snapshot.to_dict()}
 
-    def add_category(self, category_data: dict):
+    def create(self, category_data: dict):
         doc_ref = self.col_ref.document()
         doc_ref.set(category_data)
         return doc_ref.id
 
-    def update_category(self, category_id: str, category_data: dict):
+    def update(self, category_id: str, category_data: dict):
         doc_ref = self.col_ref.document(category_id)
         doc_snapshot = doc_ref.get()
         if not doc_snapshot.exists:
@@ -27,7 +27,7 @@ class CategoriesDatabase:
         doc_ref.update(category_data)
         return True
 
-    def delete_category(self, category_id: str):
+    def delete(self, category_id: str):
         doc_ref = self.col_ref.document(category_id)
         doc_snapshot = doc_ref.get()
         if not doc_snapshot.exists:
