@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 
 class JSONStorage:
@@ -13,6 +13,7 @@ class JSONStorage:
             self._save_data({
                 "banned_users": [],
                 "servers": [],
+                "categories": [],
                 "plans": [],
                 "settings": {}
             })
@@ -26,6 +27,7 @@ class JSONStorage:
             return {
                 "banned_users": [],
                 "servers": [],
+                "categories": [],
                 "plans": [],
                 "settings": {}
             }
@@ -81,68 +83,64 @@ class UnifiedStorage:
     def __init__(self, file_path: str = "data.json"):
         self.storage = JSONStorage(file_path)
 
-    # Banned Users Methods
-    def add_banned_user(self, user_id: int):
-        self.storage.add_to_list("banned_users", user_id)
+    def add(self, component_name: str, item_data: Any):
+        self.storage.add_to_list(component_name, item_data)
 
-    def remove_banned_user(self, user_id: int):
-        self.storage.remove_from_list("banned_users", user_id)
+    def remove(self, component_name: str, identifier: Any, id_key: str = "id"):
+        current_data = self.storage.get_component(component_name, [])
 
-    def is_user_banned(self, user_id: int) -> bool:
-        return self.storage.is_in_list("banned_users", user_id)
+        if not current_data:
+            return False
 
-    def get_banned_users(self) -> List[int]:
-        return self.storage.get_component("banned_users", [])
-
-    def modify_user_status(self, user_id: int, action: str):
-        if action == "banUser":
-            self.add_banned_user(user_id)
-        elif action == "unbanUser":
-            self.remove_banned_user(user_id)
-        else:
-            raise ValueError(f"Unknown action: {action}")
-
-    # Server Methods
-    def add_server(self, server_data: Dict[str, Any]):
-        servers = self.storage.get_component("servers", [])
-        servers.append(server_data)
-        self.storage.set_component("servers", servers)
-        return
-
-    def get_server(self, server_id: str) -> Optional[Dict[str, Any]]:
-        servers = self.storage.get_component("servers", [])
-        for server in servers:
-            if server.get("id") == server_id:
-                return server
-        return None
-
-    def update_server(self, server_id: str, updates: Dict[str, Any]):
-        servers = self.storage.get_component("servers", [])
-        for i, server in enumerate(servers):
-            if server.get("id") == server_id:
-                servers[i].update(updates)
-                self.storage.set_component("servers", servers)
-                return True
+        if isinstance(current_data, list):
+            if len(current_data) > 0 and isinstance(current_data[0], dict):
+                new_data = [item for item in current_data if item.get(id_key) != identifier]
+                self.storage.set_component(component_name, new_data)
+                return len(new_data) < len(current_data)
+            else:
+                # Simple list - remove value directly
+                if identifier in current_data:
+                    current_data.remove(identifier)
+                    self.storage.set_component(component_name, current_data)
+                    return True
         return False
 
-    def remove_server(self, server_id: str):
-        servers = self.storage.get_component("servers", [])
-        servers = [s for s in servers if s.get("id") != server_id]
-        self.storage.set_component("servers", servers)
+    def get(self, component_name: str, identifier: Any = None, id_key: str = "id"):
+        data = self.storage.get_component(component_name, [] if component_name != "settings" else {})
 
-    def get_all_servers(self) -> List[Dict[str, Any]]:
-        return self.storage.get_component("servers", [])
+        if identifier is None:
+            return data
 
-    # Settings Methods
-    def set_setting(self, key: str, value: Any):
-        self.storage.update_component("settings", {key: value})
+        if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+            for item in data:
+                if item.get(id_key) == identifier:
+                    return item
+            return None
+        elif isinstance(data, dict):
+            return data.get(identifier)
+        else:
+            return identifier if identifier in data else None
 
-    def get_setting(self, key: str, default: Any = None) -> Any:
-        settings = self.storage.get_component("settings", {})
-        return settings.get(key, default)
+    def update(self, component_name: str, identifier: Any, updates: Dict[str, Any], id_key: str = "id"):
+        if component_name == "settings":
+            self.storage.update_component("settings", {identifier: updates})
+            return True
 
-    def get_all_settings(self) -> Dict[str, Any]:
-        return self.storage.get_component("settings", {})
+        current_data = self.storage.get_component(component_name, [])
+
+        if isinstance(current_data, list):
+            for i, item in enumerate(current_data):
+                if isinstance(item, dict) and item.get(id_key) == identifier:
+                    current_data[i].update(updates)
+                    self.storage.set_component(component_name, current_data)
+                    return True
+        return False
+
+    def set(self, component_name: str, data: Any):
+        self.storage.set_component(component_name, data)
+
+    def exists(self, component_name: str, identifier: Any, id_key: str = "id") -> bool:
+        return self.get(component_name, identifier, id_key) is not None
 
 
 def deep_json_load(obj):
