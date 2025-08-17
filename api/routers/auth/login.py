@@ -6,13 +6,16 @@ import jwt
 from fastapi import APIRouter, HTTPException, status
 
 from api.schemas.auth import LoginModel, TokenModel
+from data import json_storage
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/auth"
+)
 
 # --- Config ---
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
 JWT_ALG = "HS256"
-ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 60
+ACCESS_TOKEN_EXPIRE_SECONDS = 60 * (json_storage.get("accessTokenExpireMinutes") or 60)
 
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASS = os.getenv("ADMIN_PASS", "changeme")
