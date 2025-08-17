@@ -1,15 +1,57 @@
+import asyncio
+import os
+import threading
+
+import uvicorn
 from telegram.ext import ApplicationBuilder
 
+from api.app import web_app
 from config import settings
 from handlers import register_handlers
-from handlers.globals import non_functioning_query_handler, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
+from handlers.globals import (
+    non_functioning_query_handler,
+    return_to_main_menu_handler,
+    return_to_main_menu_inline_handler,
+    start_command_handler,
+)
 
-app = ApplicationBuilder().token(settings.telegram_bot_token).build()
+# ----- Telegram bot -----
+tg_app = ApplicationBuilder().token(settings.telegram_bot_token).build()
+register_handlers(tg_app)
+tg_app.add_handler(start_command_handler)
+tg_app.add_handler(return_to_main_menu_handler)
+tg_app.add_handler(return_to_main_menu_inline_handler)
+tg_app.add_handler(non_functioning_query_handler)
 
-register_handlers(app)
-app.add_handler(start_command_handler)
-app.add_handler(return_to_main_menu_handler)
-app.add_handler(return_to_main_menu_inline_handler)
-app.add_handler(non_functioning_query_handler)
 
-app.run_polling()
+def _bot_worker():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    async def _run():
+        await tg_app.initialize()
+        await tg_app.start()
+        await tg_app.updater.start_polling()
+
+    loop.create_task(_run())
+    try:
+        loop.run_forever()
+    finally:
+        try:
+            loop.run_until_complete(tg_app.stop())
+            loop.run_until_complete(tg_app.shutdown())
+        except Exception:
+            pass
+        loop.close()
+
+
+def start_bot_in_background():
+    t = threading.Thread(target=_bot_worker, name="telegram-bot", daemon=True)
+    t.start()
+    return t
+
+
+if __name__ == "__main__":
+    start_bot_in_background()
+    port = int(os.getenv("API_PORT", "21312"))
+    uvicorn.run(web_app, port=port, workers=1)

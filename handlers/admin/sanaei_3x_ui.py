@@ -4,7 +4,7 @@ from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
 from api_client.sanaei_3x_ui import SanaeiXuiClient
 from data import json_storage
 from database import servers_db
-from handlers.globals import return_to_main_menu_filter
+from handlers.globals import return_to_main_menu_filter, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
 from keyboards import get_return_to_main_menu_keyboard
 
 ENTER_SERVER_NAME, ENTER_SERVER_LIMIT, ENTER_SERVER_EMOJI, ENTER_PANEL_URL, ENTER_PANEL_USERNAME, ENTER_PANEL_PASSWORD = range(6)
@@ -186,6 +186,10 @@ new_sanaei_3x_ui_handler = ConversationHandler(
             MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, panel_password_handler)
         ]
     },
-    fallbacks=[],
+    fallbacks=[
+        start_command_handler,
+        return_to_main_menu_handler,
+        return_to_main_menu_inline_handler
+    ],
     allow_reentry=True,
 )
