@@ -3,7 +3,7 @@ import os
 import threading
 
 import uvicorn
-from telegram.ext import ApplicationBuilder
+from telegram.ext import ApplicationBuilder, PicklePersistence
 
 from api.app import web_app
 from config import settings
@@ -16,7 +16,11 @@ from handlers.globals import (
 )
 
 # ----- Telegram bot -----
-tg_app = ApplicationBuilder().token(settings.telegram_bot_token).build()
+persistence = PicklePersistence(
+    filepath="data/bot_data.pkl",
+    update_interval=5,
+)
+tg_app = ApplicationBuilder().persistence(persistence).token(settings.telegram_bot_token).build()
 register_handlers(tg_app)
 tg_app.add_handler(start_command_handler)
 tg_app.add_handler(return_to_main_menu_handler)
