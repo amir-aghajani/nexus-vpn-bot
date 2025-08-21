@@ -134,10 +134,3 @@ rename_category_conv_handler = ConversationHandler(
     allow_reentry=True,
     name='renameCategory',
 )
-
-
-def register_category_management_handlers(app):
-    app.add_handler(create_category_conv_handler)
-    app.add_handler(rename_category_conv_handler)
-    app.add_handler(CallbackQueryHandler(delete_category_handler, pattern=r'^admin:deleteCategory:'))
-    app.add_handler(CallbackQueryHandler(manage_categories, pattern=r'^admin:manageCategories'))

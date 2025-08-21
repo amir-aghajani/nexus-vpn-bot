@@ -27,7 +27,7 @@ def plans_keyboard(category_id: str) -> InlineKeyboardMarkup:
 
 def servers_keyboard() -> InlineKeyboardMarkup:
     servers = json_storage.get('servers')
-    servers = [server for server in servers if server['status'] == 'ACTIVE']
+    servers = [server for server in servers if server['status'] == 'enabled']
     keyboard = []
 
     if not servers:
