@@ -13,7 +13,7 @@ class StatusTypes(str, Enum):
     disabled = 'disabled'
 
 
-class ServerCreateModel(BaseModel):
+class ServerModel(BaseModel):
     name: str
     emoji: str
     configLimit: int = 250
