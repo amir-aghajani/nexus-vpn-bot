@@ -7,7 +7,7 @@ from utils import deep_json_load
 urllib3.disable_warnings(InsecureRequestWarning)
 
 
-class SanaeiXuiClient:
+class SanaeiClient:
     def __init__(self, panel_url, username, password):
         self.base_url = panel_url.rstrip('/')
         self.username = username

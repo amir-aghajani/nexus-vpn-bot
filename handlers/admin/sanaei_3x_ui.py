@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
-from api_client.sanaei_3x_ui import SanaeiXuiClient
+from api_client.sanaei import SanaeiClient
 from data import json_storage
 from database import servers_db
 from handlers.globals import return_to_main_menu_filter, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
@@ -121,7 +121,7 @@ async def panel_password_handler(update: Update, context: ContextTypes.DEFAULT_T
     panel_password = message.text
     context.user_data['serverPanelPassword'] = panel_password
 
-    sanaei_client = SanaeiXuiClient(
+    sanaei_client = SanaeiClient(
         panel_url=context.user_data['serverPanelUrl'],
         username=context.user_data['serverPanelUsername'],
         password=context.user_data['serverPanelPassword']
@@ -147,7 +147,7 @@ async def panel_password_handler(update: Update, context: ContextTypes.DEFAULT_T
         'panelUsername': context.user_data['serverPanelUsername'],
         'panelPassword': context.user_data['serverPanelPassword'],
         'status': 'disabled',
-        'panelType': '3x-ui',
+        'panelType': 'sanaei',
     }
 
     server_id = servers_db.create(server_data)

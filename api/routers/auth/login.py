@@ -1,5 +1,4 @@
 import hmac
-import os
 import time
 
 import jwt
@@ -9,16 +8,16 @@ from api.schemas.auth import LoginModel, TokenModel
 from data import json_storage
 
 router = APIRouter(
-    prefix="/auth"
+    prefix="/login"
 )
 
 # --- Config ---
-JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
+JWT_SECRET = json_storage.get('jwtSecret')
 JWT_ALG = "HS256"
 ACCESS_TOKEN_EXPIRE_SECONDS = 60 * (json_storage.get("accessTokenExpireMinutes") or 60)
 
-ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "changeme")
+ADMIN_USER = json_storage.get("botPanelUsername") or "admin"
+ADMIN_PASS = json_storage.get("botPanelPassword") or "1234"
 
 
 # --- Helpers ---
@@ -35,7 +34,7 @@ def create_access_token(sub: str, expires_in: int = ACCESS_TOKEN_EXPIRE_SECONDS)
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
 
 
-@router.post("/login", response_model=TokenModel)
+@router.post("/", response_model=TokenModel)
 async def login(user_credentials: LoginModel):
     if not verify_admin_creds(user_credentials.username, user_credentials.password):
         raise HTTPException(

@@ -1,8 +1,9 @@
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
 
+from data import json_storage
 from handlers.globals import return_to_main_menu_inline_handler, start_command_handler
-from .keyboards import categories_keyboard, plans_keyboard, servers_keyboard
+from .keyboards import categories_keyboard, finalize_keyboard, plans_keyboard, servers_keyboard
 
 SELECT_CATEGORY, SELECT_PLAN, SELECT_SERVER, FINALIZE = range(4)
 
@@ -73,9 +74,16 @@ async def on_server(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     server_id = query.data
     context.user_data['buyPhase']['serverId'] = server_id
+    categry_details = json_storage.get('categories', context.user_data['buyPhase']['categoryId'])
+    plan_details = json_storage.get('plans', context.user_data['buyPhase']['planId'])
+    server_details = json_storage.get('servers', server_id)
 
     await query.edit_message_text(
-        text="لطفا خرید خود را نهایی کنید:"
+        text="اطلاعات خرید شما:\n\n"
+             "نام پلن: " + f"{plan_details['name']}\n\n" +
+             "لوکیشن سرور: " + f"{server_details['emoji']} {server_details['name']}\n\n" +
+             f"پلن: {plan_details['name']}\n\n",
+        reply_markup=finalize_keyboard()
     )
     await query.answer()
     print(context.user_data)
@@ -89,8 +97,18 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data['buyPhase'].pop('serverId')
         return await on_plan(update, context)
 
+    if query.data == 'approve':
+        categry_details = json_storage.get('categories', context.user_data['buyPhase']['categoryId'])
+        plan_details = json_storage.get('plans', context.user_data['buyPhase']['planId'])
+        server_details = json_storage.get('servers', context.user_data['buyPhase']['serverId'])
+        print(categry_details)
+        print(plan_details)
+        print(server_details)
+    else:
+        context.user_data.pop('buyPhase')
+
     print(context.user_data)
-    context.user_data.clear()
+
     return ConversationHandler.END
 
 

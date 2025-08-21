@@ -42,3 +42,11 @@ def servers_keyboard() -> InlineKeyboardMarkup:
 
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به پلن‌ها', callback_data='returnToPlans')])
     return InlineKeyboardMarkup(keyboard)
+
+
+def finalize_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton('❌ انصراف از خرید', callback_data='cancel'), InlineKeyboardButton('✅ تایید خرید', callback_data='approve'), ],
+        [InlineKeyboardButton('↩️ بازگشت به سرورها', callback_data='returnToServers')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
