@@ -1,9 +1,13 @@
 import asyncio
 import os
 import threading
+from warnings import filterwarnings
 
 import uvicorn
 from telegram.ext import ApplicationBuilder, PicklePersistence
+from telegram.warnings import PTBUserWarning
+
+filterwarnings(action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning)
 
 from api.app import web_app
 from config import settings

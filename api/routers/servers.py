@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
 
+from api.helpers import login_required
 from api.schemas import servers
 from api_client.sanaei import SanaeiClient
 from data import json_storage
@@ -9,6 +10,7 @@ from database import servers_db
 router = APIRouter(
     prefix="/servers",
     tags=["servers"],
+    dependencies=[Depends(login_required)]
 )
 
 
