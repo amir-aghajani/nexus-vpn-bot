@@ -5,22 +5,22 @@ from api.helpers import login_required
 from api.schemas import servers
 from api_client.sanaei import SanaeiClient
 from data import json_storage
-from database import servers_db
+from database import db_client
 
 router = APIRouter(
-    prefix="/servers",
-    tags=["servers"],
+    prefix='/servers',
+    tags=['servers'],
     dependencies=[Depends(login_required)]
 )
 
 
-@router.get("/")
+@router.get('/')
 async def get_servers():
-    return json_storage.get("servers")
+    return json_storage.get('servers')
 
 
 def test_server_connection(server_detials: servers.ServerModel):
-    if server_detials.panelType == "sanaei":
+    if server_detials.panelType == 'sanaei':
         client = SanaeiClient(
             panel_url=server_detials.panelUrl,
             username=server_detials.panelUsername,
@@ -30,24 +30,24 @@ def test_server_connection(server_detials: servers.ServerModel):
         if not client.test_client_connection():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to connect to the Sanaei panel. Please check your credentials and URL."
+                detail='Failed to connect to the Sanaei panel. Please check your credentials and URL.'
             )
 
     else:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Panel type not supported yet."
+            detail='Panel type not supported yet.'
         )
 
     return
 
 
-@router.post("/")
+@router.post('/')
 async def create_server(server_detials: servers.ServerModel):
     test_server_connection(server_detials)
 
-    server_data = server_detials.model_dump()
-    server_data['id'] = servers_db.create(server_data)
+    server_dict = server_detials.model_dump()
+    server_data = db_client.create('servers', server_dict)
     json_storage.add('servers', server_data)
 
     return JSONResponse(
@@ -56,19 +56,19 @@ async def create_server(server_detials: servers.ServerModel):
     )
 
 
-@router.put("/{server_id}/")
+@router.put('/{server_id}/')
 async def update_server(server_id: str, server_details: servers.ServerModel):
-    if not servers_db.exists(server_id):
+    if not db_client.exists('servers', server_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Server not found."
+            detail='Server not found.'
         )
 
     test_server_connection(server_details)
 
-    update_data = server_details.model_dump()
-    servers_db.update(server_id, update_data)
-    json_storage.update('servers', server_id, update_data)
+    updated_server_dict = server_details.model_dump()
+    updated_server = db_client.update('servers', server_id, updated_server_dict)
+    json_storage.update('servers', server_id, updated_server)
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -76,15 +76,15 @@ async def update_server(server_id: str, server_details: servers.ServerModel):
     )
 
 
-@router.delete("/{server_id}/")
+@router.delete('/{server_id}/')
 async def delete_server(server_id: str):
-    if not servers_db.exists(server_id):
+    if not db_client.exists('servers', server_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Server not found."
+            detail='Server not found.'
         )
 
-    servers_db.delete(server_id)
+    db_client.delete('servers', server_id)
     json_storage.remove('servers', server_id)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

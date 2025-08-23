@@ -2,7 +2,6 @@ from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
 from data import json_storage
-from database import categories_db
 from handlers.globals import return_to_main_menu_filter, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
 from keyboards import get_return_to_main_menu_keyboard, manage_categories_keyboard
 

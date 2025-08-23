@@ -183,6 +183,22 @@ def deep_json_load(obj):
         return obj
 
 
+from datetime import datetime
+
+
+def make_json_serializable(data):
+    if isinstance(data, dict):
+        return {k: make_json_serializable(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [make_json_serializable(v) for v in data]
+    elif isinstance(data, datetime):
+        return data.isoformat()
+    elif hasattr(data, "isoformat"):
+        return data.isoformat()
+    else:
+        return data
+
+
 server_status = {
     "enabled": "✅ فعال",
     "disabled": "❌ غیرفعال",
