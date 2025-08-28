@@ -1,3 +1,5 @@
+import json
+
 import requests
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
@@ -22,36 +24,32 @@ class SanaeiClient:
             if not self.login():
                 return None
 
-        url = self.base_url + path
+        if path == '/login':
+            url = f"{self.base_url}{path}"
+        else:
+            url = f"{self.base_url}{self.base_api_url}{path}"
 
         try:
-            response = self.session.request(method, url, verify=False, timeout=20, **kwargs)
 
+            response = self.session.request(method, url, verify=False, timeout=20, **kwargs)
             if response.status_code in [401, 403]:
                 if not self.login(): return None
                 response = self.session.request(method, url, verify=False, timeout=20, **kwargs)
 
-            if not response.ok:
-                return None
+            if response.ok:
+                return deep_json_load(response.json())
 
-            return deep_json_load(response.json())
+            return None
 
         except Exception as e:
-            return False
+            pass
 
     def login(self):
         self.is_logged_in = False
         payload = {'username': self.username, 'password': self.password}
         response_data = self._request('post', '/login', data=payload)
-
-        if response_data and response_data.get('success'):
-            if self.session.cookies:
-                self.is_logged_in = True
-                return True
-            else:
-                return False
-        else:
-            return False
+        self.is_logged_in = bool(response_data and response_data.get("success") and self.session.cookies)
+        return self.is_logged_in
 
     def check_login(self):
         if self.is_logged_in:
@@ -60,11 +58,7 @@ class SanaeiClient:
         return self.login()
 
     def list_of_inbounds(self):
-        if not self.check_login():
-            return False
-
-        response = self._request('get', f'{self.base_api_url}/list')
-
+        response = self._request('get', '/list')
         if response and response.get('success'):
             return response.get('obj', [])
         else:
@@ -75,3 +69,17 @@ class SanaeiClient:
             return False
 
         return True
+
+    def create_inbound(self, inbound_id, inbound_data):
+        self._request('post', f'/addClient', data={
+            'id': inbound_id,
+            'settings': json.dumps({
+                'clients': [inbound_data]
+            })
+        })
+
+        return
+
+    def get_client_traffic(self, client_uuid):
+        response = self._request('get', f'/getClientTrafficsById/{client_uuid}')
+        return response.get('obj') if response and response.get('success') else None

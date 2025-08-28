@@ -1,3 +1,9 @@
+import random
+import string
+import uuid
+from datetime import datetime, timedelta, UTC
+from api_client import sanaei
+
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
 
@@ -9,18 +15,19 @@ SELECT_CATEGORY, SELECT_PLAN, SELECT_SERVER, FINALIZE = range(4)
 
 
 async def buy_subscription_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print(context.user_data)
-    context.user_data['buyPhase'] = {}
-    if 'latestConversationMessageId' in context.user_data:
-        try:
-            await context.bot.delete_message(
-                chat_id=update.effective_user.id,
-                message_id=context.user_data['latestConversationMessageId']
-            )
-        except Exception as e:
-            print(f"Error deleting message: {e}")
-    context.user_data['latestConversationMessageId'] = update.callback_query.message.message_id
     query = update.callback_query
+    context.user_data['buyPhase'] = {}
+
+    if not query.data == 'returnToCategories':
+        if 'latestConversationMessageId' in context.user_data:
+            try:
+                await context.bot.delete_message(
+                    chat_id=update.effective_user.id,
+                    message_id=context.user_data['latestConversationMessageId']
+                )
+            except Exception as e:
+                print(f"Error deleting message: {e}")
+        context.user_data['latestConversationMessageId'] = update.callback_query.message.message_id
 
     await query.answer()
     await query.edit_message_text(
@@ -97,17 +104,55 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data['buyPhase'].pop('serverId')
         return await on_plan(update, context)
 
+    await query.answer()
+
     if query.data == 'approve':
         categry_details = json_storage.get('categories', context.user_data['buyPhase']['categoryId'])
         plan_details = json_storage.get('plans', context.user_data['buyPhase']['planId'])
         server_details = json_storage.get('servers', context.user_data['buyPhase']['serverId'])
-        print(categry_details)
-        print(plan_details)
-        print(server_details)
+
+        config_uuid = str(uuid.uuid4())
+
+        if server_details['panelType'] == 'sanaei':
+            expiry_date = datetime.now(UTC) + timedelta(days=plan_details['duration'])
+            total_bandwidth = plan_details['bandwidth'] * 1073741824
+            user_email = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+            user_sub_id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+
+            try:
+                client = sanaei.SanaeiClient(
+                    server_details['panelUrl'],
+                    server_details['panelUsername'],
+                    server_details['panelPassword']
+                )
+                server_inbounds = client.list_of_inbounds()
+                print(client.get_client_traffic(client_uuid='370d32cf-35ee-4342-ba2c-80756cf02061'))
+                """
+                for inbound in server_inbounds:
+                    if inbound.get('id'):
+                        inbound_data = {
+                            "id": config_uuid,
+                            "flow": "",
+                            "email": user_email + "_INBOUD_" + str(inbound['id']),
+                            "limitIp": 0,
+                            "totalGB": total_bandwidth,
+                            "expiryTime": int(expiry_date.timestamp()) * 1000,
+                            "enable": True,
+                            "tgId": update.effective_user.id,
+                            "subId": user_sub_id,
+                            "comment": "AUTO_GENERATED_BY_NEXUS",
+                            "reset": 0
+                        }
+                        client.create_inbound(inbound_id=inbound['id'], inbound_data=inbound_data)
+                """
+
+
+            except Exception as e:
+                print(f"Error creating inbound: {e}")
+
+            return FINALIZE
     else:
         context.user_data.pop('buyPhase')
-
-    print(context.user_data)
 
     return ConversationHandler.END
 
