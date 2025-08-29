@@ -16,70 +16,66 @@ class SanaeiClient:
         self.password = password
         self.session = requests.Session()
         self.session.headers.update({'Accept': 'application/json'})
-        self.is_logged_in = False
         self.base_api_url = '/panel/api/inbounds'
 
-    def _request(self, method, path, **kwargs):
-        if not self.is_logged_in and path != '/login':
-            if not self.login():
-                return None
+        self.login()
 
-        if path == '/login':
-            url = f"{self.base_url}{path}"
-        else:
+    def _request(self, method, path, api: bool = True, **kwargs):
+        if api:
             url = f"{self.base_url}{self.base_api_url}{path}"
+        else:
+            url = f"{self.base_url}{path}"
 
         try:
-
             response = self.session.request(method, url, verify=False, timeout=20, **kwargs)
+
             if response.status_code in [401, 403]:
-                if not self.login(): return None
+                self.login()
                 response = self.session.request(method, url, verify=False, timeout=20, **kwargs)
 
-            if response.ok:
-                return deep_json_load(response.json())
+            if not response.text:
+                raise ValueError(
+                    'Empty response from sever\n\n' +
+                    'Requested URL:\n\n' + url
+                )
 
-            return None
-
+            response_json = deep_json_load(response.json())
+            return response_json.get('obj') or response_json
         except Exception as e:
-            pass
+            raise ValueError(f'Error during request to Sanaei panel: {str(e)}')
 
     def login(self):
-        self.is_logged_in = False
         payload = {'username': self.username, 'password': self.password}
-        response_data = self._request('post', '/login', data=payload)
-        self.is_logged_in = bool(response_data and response_data.get("success") and self.session.cookies)
-        return self.is_logged_in
+        response = self._request('post', '/login', api=False, data=payload)
 
-    def check_login(self):
-        if self.is_logged_in:
-            return True
-
-        return self.login()
+        if not bool(response and self.session.cookies):
+            raise ValueError(
+                'Login to Sanaei panel failed. Please check server credentials!\n\n' +
+                'Sever panel url:\n\n' + self.base_url
+            )
 
     def list_of_inbounds(self):
-        response = self._request('get', '/list')
-        if response and response.get('success'):
-            return response.get('obj', [])
-        else:
-            return False
+        return self._request('get', '/list', api=True)
 
     def test_client_connection(self):
-        if not self.login():
-            return False
-
-        return True
+        return self.login()
 
     def create_inbound(self, inbound_id, inbound_data):
-        self._request('post', f'/addClient', data={
+        return self._request('post', f'/addClient', data={
             'id': inbound_id,
             'settings': json.dumps({
                 'clients': [inbound_data]
             })
-        })
-
-        return
+        }, api=True)
 
     def get_client_traffic(self, client_uuid):
-        response = self._request('get', f'/getClientTrafficsById/{client_uuid}')
-        return response.get('obj') if response and response.get('success') else None
+        return self._request('get', f'/getClientTrafficsById/{client_uuid}', api=True)
+
+    def get_sub_base_url(self):
+        response = self._request('post', '/panel/setting/defaultSettings', api=False)
+
+        sub_uri = response.get('subURI')
+        if not sub_uri:
+            raise ValueError('Subcription is not enabled on Sanaei panel')
+
+        return sub_uri

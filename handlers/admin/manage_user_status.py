@@ -34,6 +34,7 @@ async def manage_user_status_entry(update: Update, context: ContextTypes.DEFAULT
 
 async def change_user_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.text
+    print(user_id)
     if not await user_id_helper(update, user_id):
         return ENTER_USER_ID
 

@@ -5,7 +5,7 @@ from data import json_storage
 
 def categories_keyboard() -> InlineKeyboardMarkup:
     categories = json_storage.get('categories') or []
-    keyboard = [[InlineKeyboardButton(f'{category['name']}', callback_data=category['id'])] for category in categories]
+    keyboard = [[InlineKeyboardButton(f'{category['name']}', callback_data=f'category:{category['id']}')] for category in categories]
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به منوی اصلی', callback_data='returnToMainMenu')])
     return InlineKeyboardMarkup(keyboard)
 
@@ -19,7 +19,7 @@ def plans_keyboard(category_id: str) -> InlineKeyboardMarkup:
 
     else:
         for plan in plans:
-            keyboard.append([InlineKeyboardButton(f'{plan['name']} - {plan['price']} تومان', callback_data=plan['id'])])
+            keyboard.append([InlineKeyboardButton(f'{plan['name']} - {plan['price']:,} تومان', callback_data=f'plan:{plan['id']}')])
 
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به دسته بندی‌ها', callback_data='returnToCategories')])
     return InlineKeyboardMarkup(keyboard)
@@ -37,7 +37,7 @@ def servers_keyboard() -> InlineKeyboardMarkup:
             keyboard.append([
                 InlineKeyboardButton(
                     f'{server['emoji']} {server['name']}',
-                    callback_data=server['id'])
+                    callback_data=f'server:{server['id']}')
             ])
 
     keyboard.append([InlineKeyboardButton('↩️ بازگشت به پلن‌ها', callback_data='returnToPlans')])
@@ -46,7 +46,7 @@ def servers_keyboard() -> InlineKeyboardMarkup:
 
 def finalize_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton('❌ انصراف از خرید', callback_data='cancel'), InlineKeyboardButton('✅ تایید خرید', callback_data='approve'), ],
+        [InlineKeyboardButton('❌ انصراف از خرید', callback_data='returnToMainMenu'), InlineKeyboardButton('✅ تایید خرید', callback_data='approve'), ],
         [InlineKeyboardButton('↩️ بازگشت به سرورها', callback_data='returnToServers')]
     ]
     return InlineKeyboardMarkup(keyboard)

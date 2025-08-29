@@ -67,6 +67,9 @@ async def return_to_main_menu_inline(update: Update, context: ContextTypes.DEFAU
     query = update.callback_query
     is_admin = True if update.effective_user.id in settings.telegram_bot_admin_ids else False
 
+    context.user_data.pop('latestInlineConversationMessageId')
+    context.user_data.pop('buyPhase')
+
     await query.edit_message_text(
         text=
         "🏠 شما به منو اصلی بازگشتید 🏠\n\n"
