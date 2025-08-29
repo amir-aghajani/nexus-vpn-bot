@@ -104,10 +104,11 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     plan_details = json_storage.get('plans', context.user_data['buyPhase']['planId'])
     server_details = json_storage.get('servers', context.user_data['buyPhase']['serverId'])
+
     user_wallet_balance = db_client.fetch('users', str(update.effective_user.id)).get('walletBalance', 0)
-    # if user_wallet_balance < plan_details['price']:
-    #     await query.answer('❌ موجودی کیف پول شما کافی نیست ❌', show_alert=True)
-    #     return FINALIZE
+    if user_wallet_balance < plan_details['price']:
+        await query.answer('❌ موجودی کیف پول شما کافی نیست ❌', show_alert=True)
+        return FINALIZE
 
     config_uuid = str(uuid.uuid4())
     config_email = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
@@ -167,7 +168,6 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "🔻 لینک کانفیگ شما:\n\n" + f"<code>{config_url}</code>",
                 parse_mode="HTML"
             )
-
 
         except Exception as e:
             raise BotError(e)
