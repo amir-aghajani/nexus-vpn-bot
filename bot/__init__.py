@@ -28,9 +28,7 @@ tg_app.add_handler(start_command_handler)
 tg_app.add_handler(return_to_main_menu_handler)
 tg_app.add_handler(return_to_main_menu_inline_handler)
 tg_app.add_handler(non_functioning_query_handler)
-
-
-# tg_app.add_error_handler(error_handler)
+tg_app.add_error_handler(error_handler)
 
 
 def _bot_worker():

@@ -7,35 +7,14 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from keyboards import (
-    get_custom_keyboard,
-    get_wallet_amount_keyboard,
-    get_transaction_decision_keyboard,
-    get_back_to_menu_keyboard
-)
 
-from utils import (
-    channel_membership_and_phone_number_required,
-    return_to_main_menu
-)
-
-from commands import (
-    start_command
-)
-
-from config import (
-    FIRESTORE_DATABASE,
-    ADMIN_CHANNEL_CHAT_ID,
-    BLUEBANK_PHOTO_URL,
-    get_payment_message
-)
-
+from data import json_storage
+from database import db_client
 import time
 
 CUSTOM_AMOUNT, SCREENSHOT_PROOF = range(2)
 
 
-@channel_membership_and_phone_number_required
 async def wallet_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data) -> int:
     """Starts the wallet section and sends the user the wallet keyboard"""
 

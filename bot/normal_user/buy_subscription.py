@@ -8,7 +8,7 @@ from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
 
 from api_client import sanaei
-from bot.helpers import parse_callback
+from bot.helpers import parse_callback, user_check
 from bot.qr_maker import generate_qr
 from data import json_storage
 from database import db_client
@@ -19,7 +19,8 @@ from .keyboards import categories_keyboard, finalize_keyboard, plans_keyboard, s
 SELECT_CATEGORY, SELECT_PLAN, SELECT_SERVER, FINALIZE = range(4)
 
 
-async def buy_subscription_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+@user_check
+async def buy_subscription_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
     query = update.callback_query
     context.user_data['buyPhase'] = {}
 

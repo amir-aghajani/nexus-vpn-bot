@@ -11,8 +11,8 @@ class DatabaseClient:
         docs = self.db.collection(collection).stream()
         return [make_json_serializable({'id': doc.id, **doc.to_dict()}) for doc in docs]
 
-    def fetch(self, collection: str, document_id: str) -> dict | None:
-        doc_ref = self.db.collection(collection).document(document_id)
+    def fetch(self, collection: str, document_id) -> dict | None:
+        doc_ref = self.db.collection(collection).document(str(document_id))
         doc = doc_ref.get()
         if not doc.exists:
             return None
@@ -26,16 +26,16 @@ class DatabaseClient:
         })
         return self.fetch(collection, doc_ref.id)
 
-    def update(self, collection: str, document_id: str, data: dict) -> dict:
-        doc_ref = self.db.collection(collection).document(document_id)
+    def update(self, collection: str, document_id, data: dict) -> dict:
+        doc_ref = self.db.collection(collection).document(str(document_id))
         doc_ref.update(data)
-        return self.fetch(collection, document_id)
+        return self.fetch(collection, str(document_id))
 
-    def delete(self, collection: str, document_id: str) -> bool:
-        doc_ref = self.db.collection(collection).document(document_id)
+    def delete(self, collection: str, document_id) -> bool:
+        doc_ref = self.db.collection(collection).document(str(document_id))
         doc_ref.delete()
         return True
 
-    def exists(self, collection: str, document_id: str) -> bool:
-        doc_ref = self.db.collection(collection).document(document_id)
+    def exists(self, collection: str, document_id) -> bool:
+        doc_ref = self.db.collection(collection).document(str(document_id))
         return doc_ref.get().exists

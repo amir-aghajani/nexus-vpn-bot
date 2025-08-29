@@ -3,6 +3,15 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from data import json_storage
 
 
+def channels_keyboard(channels) -> InlineKeyboardMarkup:
+    keyboard = []
+    for channel in channels:
+        keyboard.append([InlineKeyboardButton(f'🔗 چنل', url=f'https://t.me/{channel.lstrip('@')}')])
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+# --- BEGIN Purchase Keyboards ---#
 def categories_keyboard() -> InlineKeyboardMarkup:
     categories = json_storage.get('categories') or []
     keyboard = [[InlineKeyboardButton(f'{category['name']}', callback_data=f'category:{category['id']}')] for category in categories]
@@ -50,3 +59,5 @@ def finalize_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton('↩️ بازگشت به سرورها', callback_data='returnToServers')]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+#--- END Purchase Keyboards ---#
