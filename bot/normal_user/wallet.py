@@ -1,11 +1,12 @@
-import time
-
 from telegram import Update
-from telegram.ext import (CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler)
+from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
+from bot.admin.keyboards import review_transaction_keyboard
 from bot.helpers import user_check
 from bot.normal_user.keyboards import payment_methods_keyboard, top_up_amounts_keyboard
+from config import settings
 from data import json_storage
+from database import db_client
 from handlers.globals import return_to_main_menu_filter, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
 from keyboards import get_return_to_main_menu_keyboard
 
@@ -15,21 +16,21 @@ CHOOSE_AMOUNT, CUSTOM_AMOUNT, CHOOSE_PAYMENT_METHOD, SCREENSHOT_PROOF = range(4)
 @user_check
 async def wallet_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data) -> int:
     context.user_data['topUpPhase'] = {}
+    query = update.callback_query
 
-    if "latestInlineConversationMessageId" in context.user_data:
+    if 'latestInlineConversationMessageId' in context.user_data:
         try:
             await context.bot.delete_message(
                 chat_id=update.effective_user.id,
-                message_id=context.user_data["latestInlineConversationMessageId"]
+                message_id=context.user_data['latestInlineConversationMessageId']
             )
         except Exception as e:
-            print(f"Error deleting message: {e}")
+            print(f'Error deleting message: {e}')
 
-    query = update.callback_query
     await query.edit_message_text(
-        f"👤 شناسه کاربری شما: {user_db_data['id']}\n\n"
-        f"💰 موجودی کیف‌پول شما: {user_db_data['walletBalance']} تومان\n\n"
-        "🔹 لطفاً مبلغ مورد نظر برای افزایش موجودی کیف‌پول خود را انتخاب کنید",
+        f'👤 شناسه کاربری شما: {user_db_data['id']}\n\n'
+        f'💰 موجودی کیف‌پول شما: {user_db_data['walletBalance']} تومان\n\n'
+        '🔹 لطفاً مبلغ مورد نظر برای افزایش موجودی کیف‌پول خود را انتخاب کنید',
         reply_markup=top_up_amounts_keyboard()
     )
 
@@ -47,9 +48,9 @@ async def on_amount(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_
         print(update.effective_user.id)
         await context.bot.send_message(
             text=
-            "🌟 لطفا مبلغ مورد نظر خود را به اعداد لاتین ارسال کنید. 🌟\n\n" +
-            "💡 نمونه: \n" +
-            "69000",
+            '🌟 لطفا مبلغ مورد نظر خود را به اعداد لاتین ارسال کنید. 🌟\n\n' +
+            '💡 نمونه: \n' +
+            '69000',
             reply_markup=get_return_to_main_menu_keyboard(),
             chat_id=update.effective_user.id
         )
@@ -76,7 +77,7 @@ async def on_custom_amount(update: Update, context: ContextTypes.DEFAULT_TYPE, u
 
         if amount_value > 10000000 or amount_value < 10000:
             await update.message.reply_text(
-                "✨💸 لطفا یک مبلغ بین 10,000 تا 10,000,000 وارد کنید 💸✨",
+                '✨💸 لطفا یک مبلغ بین 10,000 تا 10,000,000 وارد کنید 💸✨',
                 reply_markup=get_return_to_main_menu_keyboard(),
                 reply_to_message_id=message.message_id
             )
@@ -94,7 +95,7 @@ async def on_custom_amount(update: Update, context: ContextTypes.DEFAULT_TYPE, u
 
     except ValueError:
         await update.message.reply_text(
-            "✨💸 لطفا یک مبلغ معتبر وارد کنید 💸✨",
+            '✨💸 لطفا یک مبلغ معتبر وارد کنید 💸✨',
             reply_markup=get_return_to_main_menu_keyboard(),
             reply_to_message_id=message.message_id
         )
@@ -103,92 +104,63 @@ async def on_custom_amount(update: Update, context: ContextTypes.DEFAULT_TYPE, u
 
 
 @user_check
+async def on_payment_method(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
+    query = update.callback_query
+    callback_data = query.data.split(':')
+
+    payment_method_details = json_storage.get('paymentMethods', callback_data[1])
+    context.user_data['topUpPhase']['paymentMethod'] = payment_method_details['id']
+
+    if payment_method_details['type'] == 'cardTransfer':
+        await query.edit_message_text(
+            text='⚠️ لطفا مبلغ ' + f'{context.user_data['topUpPhase']['amount']:,}' + ' را به شماره کارت\n' +
+                 f'<code>{payment_method_details['apiKey']}</code>\n' +
+                 'به نام ' + f'<code>{payment_method_details['cardHolderName']}</code>' + ' واریز کرده و سپس رسید تراکنش را اینجا به صورت عکس ارسال کنید:',
+            parse_mode='HTML'
+        )
+
+        return SCREENSHOT_PROOF
+
+    else:
+        await query.delete_message()
+        await query.answer('این روش پرداخت هنوز فعال نشده است!')
+
+        return ConversationHandler.END
+
+
+@user_check
 async def on_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
     user_id = update.effective_user.id
-    transaction_data = {
-        'messageId': update.message.message_id,
-        'userId': user_id,
-        'timeStamp': int(time.time()),
-        'amount': context.user_data['amount_to_add'],
-        'status': 'UNDER_REVIEW'
-    }
 
-    transactions_ref = FIRESTORE_DATABASE.collection('transactions')
-    doc_ref = transactions_ref.document()
-    doc_ref.set(transaction_data)
-    admin_text = f"مبلغ انتخابی {transaction_data['amount']} است. لطفاً بررسی کنید 🔍"
+    created_transaction = db_client.create(
+        'transactions', data={
+            'userId': user_id,
+            'messageId': update.message.message_id,
+            'amount': context.user_data['topUpPhase']['amount'],
+            'paymentMethodId': context.user_data['topUpPhase']['paymentMethod'],
+            'status': 'UNDER_REVIEW'
+        }
+    )
 
     if update.message.photo:
         photo = update.message.photo[-1]
-        await context.bot.send_photo(
-            chat_id=ADMIN_CHANNEL_CHAT_ID,
-            photo=photo.file_id,
-            caption=f'<a href="tg://user?id={user_id}">لینک کاربر</a>',
-            parse_mode='HTML'
-        )
-        await context.bot.send_message(chat_id=ADMIN_CHANNEL_CHAT_ID, text=admin_text, reply_markup=get_transaction_decision_keyboard(doc_ref.id))
+        for admin_id in settings.telegram_bot_admin_ids:
+            await context.bot.send_photo(
+                chat_id=admin_id,
+                photo=photo.file_id,
+                caption=f'تراکنش جدید\n\n' + f'مبلغ انتخابی ' + f'{created_transaction['amount']:,}' + ' است. لطفاً بررسی کنید 🔍\n\n' + 'پروفایل کاربر : ' +
+                        f'<a href="https://t.me/@id{user_id}">{user_id}</a>',
+                reply_markup=review_transaction_keyboard(created_transaction['id']),
+                parse_mode='HTML'
+            )
 
     await update.message.reply_text(
-        "⏳✨ رسید شما با موفقیت به کارشناس مربوطه ارجاع داده شده است.\n\n"
-        "■ در صورت تایید تراکنش، کیف‌پول شما ظرف چند دقیقه/لحظه شارژ خواهد شد و ما شما را مطلع خواهیم کرد.\n"
-        "» لطفاً از ارسال پیام به پشتیبانی در این زمینه خودداری نمایید! 🚫📩✨",
-        reply_markup=get_custom_keyboard()
+        '⏳✨ رسید شما با موفقیت به کارشناس مربوطه ارجاع داده شده است.\n\n'
+        '■ در صورت تایید تراکنش، کیف‌پول شما ظرف چند دقیقه/لحظه شارژ خواهد شد و ما شما را مطلع خواهیم کرد.\n'
+        '» لطفاً از ارسال پیام به پشتیبانی در این زمینه خودداری نمایید! 🚫📩✨',
     )
 
     return ConversationHandler.END
-
-
-async def handle_screenshot_review(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handles the review of the screenshot"""
-
-    user_id = update.effective_user.id
-    query = update.callback_query
-    await query.answer()
-    callback_data = query.data.split(':')
-
-    transaction_doc_ref = FIRESTORE_DATABASE.collection('transactions').document(str(callback_data[2]))
-    transaction_data = transaction_doc_ref.get().to_dict()
-
-    if transaction_data['status'] != 'UNDER_REVIEW':
-        await update.callback_query.message.reply_text(
-            "درخواست قبلاً بررسی شده 🔍"
-        )
-
-        return
-
-    user_doc_ref = FIRESTORE_DATABASE.collection('users').document(str(transaction_data['userId']))
-    user_data = user_doc_ref.get().to_dict()
-    user_funds = user_data.get('funds', 0)
-
-    if callback_data[1] == 'approve':
-        transaction_doc_ref.set({'status': 'APPROVED'}, merge=True)
-        user_doc_ref.set({'funds': int(user_funds + transaction_data['amount'])}, merge=True)
-
-        await update.callback_query.message.reply_text(
-            "درخواست با موفقیت تایید شد ✅"
-        )
-
-        await context.bot.send_message(
-            chat_id=transaction_data['userId'],
-            text=f"پرداخت موفقیت‌آمیز بود! مبلغ {transaction_data['amount']} به حساب کاربری شما با موفقیت اضافه شد. 💰✅",
-            reply_to_message_id=transaction_data['messageId']
-        )
-
-        return
-
-    elif callback_data[1] == 'deny':
-        transaction_doc_ref.set({'status': 'DENIED'}, merge=True)
-        await update.callback_query.message.reply_text(
-            "درخواست با موفقیت رد شد ❌"
-        )
-
-        await context.bot.send_message(
-            chat_id=transaction_data['userId'],
-            text="⚠️ پرداخت موفقیت‌آمیز نبود. لطفاً دوباره تلاش کنید! 🔄",
-            reply_to_message_id=transaction_data['messageId']
-        )
-
-        return
 
 
 top_up_wallet_handler = ConversationHandler(
@@ -203,7 +175,7 @@ top_up_wallet_handler = ConversationHandler(
             MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, on_custom_amount),
         ],
         CHOOSE_PAYMENT_METHOD: [
-
+            CallbackQueryHandler(on_payment_method, pattern=r'^paymentMethod:'),
         ],
         SCREENSHOT_PROOF: [
             MessageHandler(filters.PHOTO, on_screenshot)

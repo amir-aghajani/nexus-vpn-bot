@@ -11,5 +11,6 @@ class PaymentMethodType(str, Enum):
 
 class PaymentMethodBase(BaseModel):
     name: str
-    api_key: str | None = None
+    apiKey: str | None = None
+    cardHolderName: str | None = None
     type: PaymentMethodType

@@ -19,6 +19,7 @@ def user_check(handler):
     @wraps(handler)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         user_id = update.effective_user.id
+        print(context.user_data)
 
         user_db_data = db_client.fetch('users', user_id)
         if user_db_data and user_db_data['status'] == 'banned':
