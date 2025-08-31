@@ -59,4 +59,6 @@ def delete_category(category_id: str):
         )
 
     db_client.delete('categories', category_id)
+    json_storage.remove('categories', category_id)
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)

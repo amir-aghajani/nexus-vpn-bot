@@ -1,94 +1,109 @@
-from telegram import Update
-from telegram.ext import (
-    CallbackQueryHandler,
-    ContextTypes,
-    ConversationHandler,
-    CommandHandler,
-    MessageHandler,
-    filters,
-)
-
-from data import json_storage
-from database import db_client
 import time
 
-CUSTOM_AMOUNT, SCREENSHOT_PROOF = range(2)
+from telegram import Update
+from telegram.ext import (CallbackQueryHandler, ContextTypes, ConversationHandler, filters, MessageHandler)
+
+from bot.helpers import user_check
+from bot.normal_user.keyboards import payment_methods_keyboard, top_up_amounts_keyboard
+from data import json_storage
+from handlers.globals import return_to_main_menu_filter, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
+from keyboards import get_return_to_main_menu_keyboard
+
+CHOOSE_AMOUNT, CUSTOM_AMOUNT, CHOOSE_PAYMENT_METHOD, SCREENSHOT_PROOF = range(4)
 
 
+@user_check
 async def wallet_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data) -> int:
-    """Starts the wallet section and sends the user the wallet keyboard"""
+    context.user_data['topUpPhase'] = {}
 
-    user_id = update.effective_user.id
-    funds = user_db_data.get('funds', 0)
+    if "latestInlineConversationMessageId" in context.user_data:
+        try:
+            await context.bot.delete_message(
+                chat_id=update.effective_user.id,
+                message_id=context.user_data["latestInlineConversationMessageId"]
+            )
+        except Exception as e:
+            print(f"Error deleting message: {e}")
 
-    replay_keyboard = get_wallet_amount_keyboard()
-
-    await update.message.reply_text(
-        f"🌟✨👤 شناسه کاربری شما: {user_id} ✨🌟\n\n"
-        f"💎💰 موجودی کیف‌پول شما: {funds} تومان 💰💎\n",
-        reply_markup=get_wallet_amount_keyboard()
+    query = update.callback_query
+    await query.edit_message_text(
+        f"👤 شناسه کاربری شما: {user_db_data['id']}\n\n"
+        f"💰 موجودی کیف‌پول شما: {user_db_data['walletBalance']} تومان\n\n"
+        "🔹 لطفاً مبلغ مورد نظر برای افزایش موجودی کیف‌پول خود را انتخاب کنید",
+        reply_markup=top_up_amounts_keyboard()
     )
-    return ConversationHandler.END
+
+    return CHOOSE_AMOUNT
 
 
-@channel_membership_and_phone_number_required
-async def wallet_amount_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data) -> int:
-    """Handles the callback query's if the user clicks on the preset amounts"""
-
-    user_id = update.effective_user.id
+@user_check
+async def on_amount(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data) -> int:
     query = update.callback_query
     await query.answer()
     callback_data = query.data.split(':')
 
-    if callback_data[2] == 'custom':
-        await update.callback_query.message.delete()
-        await update.callback_query.message.reply_text(
-            "🌟 لطفا مبلغ مورد نظر خود را به اعداد لاتین ارسال کنید. 🌟\n"
-            "💡 نمونه: \n\n"
+    if callback_data[1] == 'custom':
+        await query.delete_message()
+        print(update.effective_user.id)
+        await context.bot.send_message(
+            text=
+            "🌟 لطفا مبلغ مورد نظر خود را به اعداد لاتین ارسال کنید. 🌟\n\n" +
+            "💡 نمونه: \n" +
             "69000",
-            reply_markup=get_back_to_menu_keyboard()
+            reply_markup=get_return_to_main_menu_keyboard(),
+            chat_id=update.effective_user.id
         )
+
         return CUSTOM_AMOUNT
+
     else:
-        amount = int(callback_data[2])
-        context.user_data['amount_to_add'] = amount
-        await update.callback_query.message.delete()
-        await context.bot.send_photo(
-            chat_id=update.effective_chat.id,
-            photo=BLUEBANK_PHOTO_URL,
-            caption=get_payment_message(amount),
-            reply_markup=get_back_to_menu_keyboard()
+        amount = int(callback_data[1])
+        context.user_data['topUpPhase']['amount'] = amount
+        await query.edit_message_text(
+            '💳 لطفاً روش پرداخت خود را انتخاب کنید:',
+            reply_markup=payment_methods_keyboard(json_storage.get('paymentMethods'))
         )
-        return SCREENSHOT_PROOF
+
+        return CHOOSE_PAYMENT_METHOD
 
 
-@channel_membership_and_phone_number_required
-async def wallet_custom_amount_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
-    """Handles the callback query's if the user clicks on the custom amount"""
-
-    amount = update.message.text
+@user_check
+async def on_custom_amount(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
+    message = update.message
+    amount = message.text
     try:
         amount_value = int(amount)
-        context.user_data['amount_to_add'] = amount_value
-        await context.bot.send_photo(
-            chat_id=update.effective_chat.id,
-            photo=BLUEBANK_PHOTO_URL,
-            caption=get_payment_message(amount_value),
-            reply_markup=get_back_to_menu_keyboard()
+
+        if amount_value > 10000000 or amount_value < 10000:
+            await update.message.reply_text(
+                "✨💸 لطفا یک مبلغ بین 10,000 تا 10,000,000 وارد کنید 💸✨",
+                reply_markup=get_return_to_main_menu_keyboard(),
+                reply_to_message_id=message.message_id
+            )
+
+            return CUSTOM_AMOUNT
+
+        context.user_data['topUpPhase']['amount'] = amount_value
+        await message.reply_text(
+            '💳 لطفاً روش پرداخت خود را انتخاب کنید:',
+            reply_to_message_id=message.message_id,
+            reply_markup=payment_methods_keyboard(json_storage.get('paymentMethods'))
         )
 
-        return SCREENSHOT_PROOF
+        return CHOOSE_PAYMENT_METHOD
 
     except ValueError:
-        await update.message.reply_text("✨💸 لطفا یک مبلغ معتبر وارد کنید 💸✨")
+        await update.message.reply_text(
+            "✨💸 لطفا یک مبلغ معتبر وارد کنید 💸✨",
+            reply_markup=get_return_to_main_menu_keyboard(),
+            reply_to_message_id=message.message_id
+        )
 
         return CUSTOM_AMOUNT
 
 
-@channel_membership_and_phone_number_required
-async def handle_screenshot_submission(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
-    """Handles the submission of the screenshot and sends the reciept to the admin for review"""
-
+@user_check
+async def on_screenshot(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
     user_id = update.effective_user.id
     transaction_data = {
         'messageId': update.message.message_id,
@@ -176,23 +191,30 @@ async def handle_screenshot_review(update: Update, context: ContextTypes.DEFAULT
         return
 
 
-wallet_handler = ConversationHandler(
+top_up_wallet_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(wallet_amount_handler, pattern=r'^wallet:add:'),
+        CallbackQueryHandler(wallet_start, pattern=r'^user:topUpWallet'),
     ],
     states={
+        CHOOSE_AMOUNT: [
+            CallbackQueryHandler(on_amount, pattern=r'^topUpAmount:'),
+        ],
         CUSTOM_AMOUNT: [
-            MessageHandler(filters.TEXT & filters.Regex(r'^🔙🏠 بازگشت به منوی اصلی 🏠🔙$'), return_to_main_menu),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, wallet_custom_amount_handler),
+            MessageHandler(filters.TEXT & ~filters.COMMAND & ~return_to_main_menu_filter, on_custom_amount),
+        ],
+        CHOOSE_PAYMENT_METHOD: [
+
         ],
         SCREENSHOT_PROOF: [
-            MessageHandler(filters.TEXT & filters.Regex(r'^🔙🏠 بازگشت به منوی اصلی 🏠🔙$'), return_to_main_menu),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, return_to_main_menu),
-            MessageHandler(filters.PHOTO, handle_screenshot_submission)
+            MessageHandler(filters.PHOTO, on_screenshot)
         ]
     },
     fallbacks=[
-        CommandHandler("start", start_command),
-        MessageHandler(filters.TEXT & filters.Regex(r'^🔙🏠 بازگشت به منوی اصلی 🏠🔙$'), return_to_main_menu),
-    ]
+        return_to_main_menu_inline_handler,
+        return_to_main_menu_handler,
+        start_command_handler,
+    ],
+    name='top_up_wallet_conversation',
+    persistent=True,
+    allow_reentry=False,
 )

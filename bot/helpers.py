@@ -19,6 +19,19 @@ def user_check(handler):
     @wraps(handler)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         user_id = update.effective_user.id
+
+        user_db_data = db_client.fetch('users', user_id)
+        if user_db_data and user_db_data['status'] == 'banned':
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="❌ دسترسی شما به ربات مسدود شده است. برای اطلاعات بیشتر با پشتیبانی تماس بگیرید."
+            )
+
+            if update.callback_query.data:
+                await update.callback_query.answer()
+
+            return
+
         not_joined_channels = []
 
         for channel_id in json_storage.get('channels'):
@@ -33,18 +46,32 @@ def user_check(handler):
                     f"Error: {e}"
                 )
 
+        if 'joinChannelsMeessageId' in context.user_data:
+            try:
+                await context.bot.delete_message(
+                    chat_id=update.effective_chat.id,
+                    message_id=context.user_data['joinChannelsMeessageId']
+                )
+                del context.user_data['joinChannelsMeessageId']
+            except Exception as e:
+                raise BotError(f"Failed to delete previous join channels message: {e}")
+
         if len(not_joined_channels) > 0:
-            await context.bot.send_message(
+            join_channels_message = await context.bot.send_message(
                 text=
                 "🔖 برای استفاده از ربات و همچنین دریافت اطلاعیه های ربات و همچنین حمایت از ما وارد کانال شوید :\n\n"
                 "سپس روی دکمه عضو شدم کلیک کنید.",
                 reply_markup=channels_keyboard(not_joined_channels),
                 chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.message_id
             )
+
+            context.user_data['joinChannelsMeessageId'] = join_channels_message.message_id
             if update.callback_query.data:
                 await update.callback_query.answer()
 
-        user_db_data = db_client.fetch('users', user_id)
+            return
+
         return await handler(update, context, user_db_data, *args, **kwargs)
 
     return wrapped

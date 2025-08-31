@@ -60,4 +60,29 @@ def finalize_keyboard() -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(keyboard)
 
-#--- END Purchase Keyboards ---#
+
+# --- END Purchase Keyboards ---#
+
+# --- BEGIN Wallet Keyboards ---#
+
+def top_up_amounts_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton('50,000 تومان', callback_data='topUpAmount:50000')],
+        [InlineKeyboardButton('100,000 تومان', callback_data='topUpAmount:100000')],
+        [InlineKeyboardButton('200,000 تومان', callback_data='topUpAmount:200000')],
+        [InlineKeyboardButton('500,000 تومان', callback_data='topUpAmount:500000')],
+        [InlineKeyboardButton('1,000,000 تومان', callback_data='topUpAmount:1000000')],
+        [InlineKeyboardButton('مبلغ دلخواه', callback_data='topUpAmount:custom')],
+        [InlineKeyboardButton('↩️ بازگشت به منوی اصلی', callback_data='returnToMainMenu')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def payment_methods_keyboard(methods) -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton(f'{method['name']}', callback_data=f'paymentMethod:{method['id']}')] for method in methods
+    ]
+
+    return InlineKeyboardMarkup(keyboard)
+
+# --- END Wallet Keyboards ---#
