@@ -5,7 +5,8 @@ import uvicorn
 from api import web_app
 from bot import start_bot_in_background
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     start_bot_in_background()
-    port = int(os.getenv("NEXUS_API_PORT", "22222"))
-    uvicorn.run(web_app, port=port, workers=1)
+    host = str(os.environ.get('NEXUS_API_IP', '127.0.0.1'))
+    port = int(os.getenv('NEXUS_API_PORT', '22222'))
+    uvicorn.run(web_app, host=host, port=port, workers=1)
