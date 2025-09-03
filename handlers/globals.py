@@ -2,7 +2,7 @@ from telegram import ReplyKeyboardRemove, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, filters, MessageHandler
 
 from config import settings
-from database import users_db
+from database import db_client
 from keyboards import get_start_keyboard
 
 
@@ -16,8 +16,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     is_admin = True if user_id in settings.telegram_bot_admin_ids else False
 
-    if not users_db.exists(user_id):
-        users_db.create(user_id)
+    if not db_client.exists('users', user_id):
+        created_user = db_client.create('users', {
+            'started': True,
+            'status': 'active',
+            'phoneNumber': None,
+            'walletBalance': 0
+        }, user_id)
 
     if is_admin:
         welcome_message = (

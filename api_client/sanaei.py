@@ -58,7 +58,8 @@ class SanaeiClient:
         return self._request('get', '/list', api=True)
 
     def test_client_connection(self):
-        return self.login()
+        self.login()
+        return True
 
     def create_inbound(self, inbound_id, inbound_data):
         return self._request('post', f'/addClient', data={

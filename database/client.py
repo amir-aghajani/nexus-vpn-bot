@@ -19,11 +19,9 @@ class DatabaseClient:
 
         return make_json_serializable({'id': doc.id, **doc.to_dict()})
 
-    def create(self, collection: str, data: dict) -> dict:
-        update_time, doc_ref = self.db.collection(collection).add({
-            **data,
-            'createdAt': firestore.SERVER_TIMESTAMP
-        })
+    def create(self, collection: str, data: dict, doc_id=None) -> dict:
+        doc_ref = self.db.collection(collection).document(str(doc_id)) if doc_id else self.db.collection(collection).document()
+        doc_ref.set({**data, 'createdAt': firestore.SERVER_TIMESTAMP})
         return self.fetch(collection, doc_ref.id)
 
     def update(self, collection: str, document_id, data: dict) -> dict:

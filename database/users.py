@@ -5,15 +5,6 @@ class UserManager:
     def __init__(self, firestore_connection: firestore.Client):
         self.db = firestore_connection
 
-    def create(self, user_id):
-        users_col_ref = self.db.collection('users')
-        user_doc_ref = users_col_ref.document(str(user_id))
-        user_doc_ref.set({
-            'started': True,
-            'firstStartAt': firestore.SERVER_TIMESTAMP,
-            'status': 'active',
-        })
-
     def exists(self, user_id):
         users_col_ref = self.db.collection('users')
         user_doc_ref = users_col_ref.document(str(user_id))
