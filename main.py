@@ -2,7 +2,7 @@ import os
 
 import uvicorn
 
-from api import web_app
+from web import web_app
 from bot import start_bot_in_background
 
 if __name__ == '__main__':

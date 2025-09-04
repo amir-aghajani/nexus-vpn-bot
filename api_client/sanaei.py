@@ -16,7 +16,7 @@ class SanaeiClient:
         self.password = password
         self.session = requests.Session()
         self.session.headers.update({'Accept': 'application/json'})
-        self.base_api_url = '/panel/api/inbounds'
+        self.base_api_url = '/panel/web/inbounds'
 
         self.login()
 
