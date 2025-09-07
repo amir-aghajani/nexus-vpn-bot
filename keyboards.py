@@ -16,16 +16,16 @@ def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
             [InlineKeyboardButton('🎯 هدیه حجم و زمان', callback_data='admin:addCompensation'), InlineKeyboardButton('🎁 مدیریت تخفیف ها', callback_data='admin:manageDiscounts')],
             [InlineKeyboardButton('💳 تنظیمات درگاه و کانال', callback_data='admin:managePaymentGateways'), InlineKeyboardButton('⚙️ تنظیمات ربات', callback_data='admin:manageBotSettings')],
             [InlineKeyboardButton('📨 ارسال پیام همگانی', callback_data='admin:sendBroadcastMessage')],
-            [InlineKeyboardButton('📪 تیکت ها', callback_data='admin:manageTickets'), InlineKeyboardButton('❌ درخواست های رد شده', callback_data='admin:manageRejectedRequests')],
+            [InlineKeyboardButton('📪 تیکت ها', callback_data='admin:tickets'), InlineKeyboardButton('❌ درخواست های رد شده', callback_data='admin:manageRejectedRequests')],
         ]
     else:
         keyboard = [
             [InlineKeyboardButton('🛠 سرویس تست', callback_data='user:testSubscription'), InlineKeyboardButton('🛒 خرید کانفیگ جدید', callback_data='user:purchase')],
-            [InlineKeyboardButton('📱 کانفیگ های من', callback_data='user:manageSubscriptions')],
+            # [InlineKeyboardButton('📱 کانفیگ های من', callback_data='user:manageSubscriptions')],
             [InlineKeyboardButton('✅💳 ارسال رسید - شارژ کیف پول', callback_data='user:topUpWallet')],
-            [InlineKeyboardButton('🧑‍💼 حساب کاربری', callback_data='user:manageAccount')],
-            [InlineKeyboardButton('🧩 آموزش اتصال', callback_data='user:connectionGuide')],
-            # InlineKeyboardButton('📨 تیکت های من', callback_data='user:manageTickets')
+            # [InlineKeyboardButton('🧑‍💼 حساب کاربری', callback_data='user:manageAccount')],
+            # [InlineKeyboardButton('🧩 آموزش اتصال', callback_data='user:connectionGuide')],
+            # InlineKeyboardButton('📨 تیکت های من', callback_data='user:tickets')
         ]
 
     return InlineKeyboardMarkup(keyboard)
