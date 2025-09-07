@@ -7,6 +7,7 @@ from bot.helpers import parse_callback, user_check
 from bot.qr_maker import generate_qr
 from data import json_storage
 from database import db_client
+from handlers.globals import clean_user_data
 from errors import BotError
 from handlers.globals import return_to_main_menu_inline_handler, start_command_handler
 from .keyboards import categories_keyboard, finalize_keyboard, plans_keyboard, servers_keyboard
@@ -17,6 +18,8 @@ SELECT_CATEGORY, SELECT_PLAN, SELECT_SERVER, FINALIZE = range(4)
 @user_check
 async def buy_subscription_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
     query = update.callback_query
+
+    await clean_user_data(update, context)
     context.user_data['buyPhase'] = {}
 
     if query.data != "returnToCategories":

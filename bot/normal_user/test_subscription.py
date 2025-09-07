@@ -6,6 +6,7 @@ from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
 
 from api_client import sanaei
 from bot.helpers import parse_callback, user_check
+from handlers.globals import clean_user_data
 from bot.qr_maker import generate_qr
 from data import json_storage
 from database import db_client
@@ -19,6 +20,7 @@ SELECT_SERVER = range(1)
 @user_check
 async def test_subscription_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data):
     query = update.callback_query
+    await clean_user_data(update, context)
 
     latest_test = user_db_data.get('testService', {}).get('latestUse')
     if latest_test:
@@ -116,5 +118,5 @@ test_subscription_callback_handler = ConversationHandler(
     ],
     name="test_subscription_conversation_handler",
     persistent=True,
-    allow_reentry=False,
+    allow_reentry=True,
 )

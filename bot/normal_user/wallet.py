@@ -6,6 +6,7 @@ from bot.helpers import user_check
 from bot.normal_user.keyboards import payment_methods_keyboard, top_up_amounts_keyboard
 from config import settings
 from data import json_storage
+from handlers.globals import clean_user_data
 from database import db_client
 from handlers.globals import return_to_main_menu_filter, return_to_main_menu_handler, return_to_main_menu_inline_handler, start_command_handler
 from keyboards import get_return_to_main_menu_keyboard
@@ -15,17 +16,10 @@ CHOOSE_AMOUNT, CUSTOM_AMOUNT, CHOOSE_PAYMENT_METHOD, SCREENSHOT_PROOF = range(4)
 
 @user_check
 async def wallet_start(update: Update, context: ContextTypes.DEFAULT_TYPE, user_db_data) -> int:
-    context.user_data['topUpPhase'] = {}
     query = update.callback_query
 
-    if 'latestInlineConversationMessageId' in context.user_data:
-        try:
-            await context.bot.delete_message(
-                chat_id=update.effective_user.id,
-                message_id=context.user_data['latestInlineConversationMessageId']
-            )
-        except Exception as e:
-            print(f'Error deleting message: {e}')
+    await clean_user_data(update, context)
+    context.user_data['topUpPhase'] = {}
 
     await query.edit_message_text(
         f'👤 شناسه کاربری شما: {user_db_data['id']}\n\n'
