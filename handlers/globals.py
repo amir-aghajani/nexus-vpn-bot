@@ -6,10 +6,26 @@ from database import db_client
 from keyboards import get_start_keyboard
 
 
+async def clean_user_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if 'latestInlineConversationMessageId' in context.user_data:
+        if update.effective_message.message_id != context.user_data['latestInlineConversationMessageId']:
+            try:
+                await context.bot.delete_message(
+                    chat_id=update.effective_user.id,
+                    message_id=context.user_data['latestInlineConversationMessageId']
+                )
+            except Exception as e:
+                print(e)
+
+        context.user_data.pop('latestInlineConversationMessageId', None)
+        context.user_data.pop('buyPhase', None)
+        context.user_data.pop('topUpPhase', None)
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.chat.type != "private":
+    if update.message.chat.type != 'private':
         await update.message.reply_text(
-            "این ربات فقط در چت های خصوصی قابل استفاده است. لطفاً به صورت DM با ربات صحبت کنید."
+            'این ربات فقط در چت های خصوصی قابل استفاده است. لطفاً به صورت DM با ربات صحبت کنید.'
         )
         return ConversationHandler.END
 
@@ -26,19 +42,21 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if is_admin:
         welcome_message = (
-                "👋 سلام مدیر عزیز! به پنل مدیریتی ربات " +
+                '👋 سلام مدیر عزیز! به پنل مدیریتی ربات ' +
                 settings.telegram_bot_name +
-                " خوش آمدید!\n\n"
-                "🔧 لطفاً از منوی زیر برای مدیریت کاربران و تنظیمات ربات استفاده کنید."
+                ' خوش آمدید!\n\n'
+                '🔧 لطفاً از منوی زیر برای مدیریت کاربران و تنظیمات ربات استفاده کنید.'
         )
     else:
         welcome_message = (
-                "🌟 به ربات " + settings.telegram_bot_name +
-                " خوش آمدید!\n\n"
-                "🚀 ما اینجا هستیم تا سریع‌ترین و بی‌نقص‌ترین دسترسی به شبکه جهانی را برای شما به ارمغان بیاوریم.\n\n"
-                "✨ بدون هیچ محدودیت و اختلالی، تجربه‌ای بی‌نظیر در دنیای مجازی را با ما تجربه کنید\n\n"
-                f"🔗 | @{settings.telegram_bot_id}"
+                '🌟 به ربات ' + settings.telegram_bot_name +
+                ' خوش آمدید!\n\n'
+                '🚀 ما اینجا هستیم تا سریع‌ترین و بی‌نقص‌ترین دسترسی به شبکه جهانی را برای شما به ارمغان بیاوریم.\n\n'
+                '✨ بدون هیچ محدودیت و اختلالی، تجربه‌ای بی‌نظیر در دنیای مجازی را با ما تجربه کنید\n\n'
+                f'🔗 | @{settings.telegram_bot_id}'
         )
+
+    await clean_user_data(update, context)
 
     await update.message.reply_text(
         text=welcome_message,
@@ -50,37 +68,37 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    is_admin = True if update.message.chat_id in settings.telegram_bot_admin_ids else False
+    user_id = update.effective_user.id
+    is_admin = user_id in settings.telegram_bot_admin_ids
 
-    delete_keyboard_message = await update.message.reply_text(
-        text="لطفا صبر کنید...",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-    await delete_keyboard_message.delete()
-    await update.message.reply_text(
-        text=
-        "🏠 شما به منو اصلی بازگشتید 🏠\n\n"
-        "🌟 چه کاری می‌توانم برای شما انجام دهم؟ 🤖",
-        reply_markup=get_start_keyboard(is_admin=is_admin),
-        reply_to_message_id=update.message.message_id
-    )
+    await clean_user_data(update, context)
 
-    return ConversationHandler.END
+    if update.message:
+        delete_keyboard_message = await update.message.reply_text(
+            text='لطفا صبر کنید...',
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        await delete_keyboard_message.delete()
 
+        await update.message.reply_text(
+            text=(
+                '🏠 شما به منو اصلی بازگشتید 🏠\n\n'
+                '🌟 چه کاری می‌توانم برای شما انجام دهم؟ 🤖'
+            ),
+            reply_markup=get_start_keyboard(is_admin=is_admin),
+            reply_to_message_id=update.message.message_id,
+        )
 
-async def return_to_main_menu_inline(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    is_admin = True if update.effective_user.id in settings.telegram_bot_admin_ids else False
+    elif update.callback_query:
+        query = update.callback_query
 
-    context.user_data.pop('latestInlineConversationMessageId', None)
-    context.user_data.pop('buyPhase', None)
-
-    await query.edit_message_text(
-        text=
-        "🏠 شما به منو اصلی بازگشتید 🏠\n\n"
-        "🌟 چه کاری می‌توانم برای شما انجام دهم؟ 🤖",
-        reply_markup=get_start_keyboard(is_admin=is_admin),
-    )
+        await query.edit_message_text(
+            text=(
+                '🏠 شما به منو اصلی بازگشتید 🏠\n\n'
+                '🌟 چه کاری می‌توانم برای شما انجام دهم؟ 🤖'
+            ),
+            reply_markup=get_start_keyboard(is_admin=is_admin),
+        )
 
     return ConversationHandler.END
 
@@ -90,7 +108,7 @@ async def non_funcitoning_button_handler(update: Update, context: ContextTypes.D
 
 
 return_to_main_menu_filter = filters.Regex(r'^↩️ بازگشت به منوی اصلی$')
-start_command_handler = CommandHandler("start", start_command)
+start_command_handler = CommandHandler('start', start_command)
 return_to_main_menu_handler = MessageHandler(filters.TEXT & return_to_main_menu_filter, return_to_main_menu)
-return_to_main_menu_inline_handler = CallbackQueryHandler(return_to_main_menu_inline, pattern=r'^returnToMainMenu')
+return_to_main_menu_inline_handler = CallbackQueryHandler(return_to_main_menu, pattern=r'^returnToMainMenu')
 non_functioning_query_handler = CallbackQueryHandler(non_funcitoning_button_handler, pattern=r'^noneFunctioningButton')

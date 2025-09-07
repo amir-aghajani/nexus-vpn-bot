@@ -34,7 +34,7 @@ def plans_keyboard(category_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def servers_keyboard() -> InlineKeyboardMarkup:
+def servers_keyboard(show_return_to_plans: bool = True) -> InlineKeyboardMarkup:
     servers = json_storage.get('servers')
     servers = [server for server in servers if server['status'] == 'enabled']
     keyboard = []
@@ -49,7 +49,8 @@ def servers_keyboard() -> InlineKeyboardMarkup:
                     callback_data=f'server:{server['id']}')
             ])
 
-    keyboard.append([InlineKeyboardButton('↩️ بازگشت به پلن‌ها', callback_data='returnToPlans')])
+    if show_return_to_plans:
+        keyboard.append([InlineKeyboardButton('↩️ بازگشت به پلن‌ها', callback_data='returnToPlans')])
     return InlineKeyboardMarkup(keyboard)
 
 

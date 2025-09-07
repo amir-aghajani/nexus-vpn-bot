@@ -20,7 +20,8 @@ def get_start_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
         ]
     else:
         keyboard = [
-            [InlineKeyboardButton('📱 کانفیگ های من', callback_data='user:manageSubscriptions'), InlineKeyboardButton('🛒 خرید کانفیگ جدید', callback_data='user:purchase')],
+            [InlineKeyboardButton('🛠 سرویس تست', callback_data='user:testSubscription'), InlineKeyboardButton('🛒 خرید کانفیگ جدید', callback_data='user:purchase')],
+            [InlineKeyboardButton('📱 کانفیگ های من', callback_data='user:manageSubscriptions')],
             [InlineKeyboardButton('✅💳 ارسال رسید - شارژ کیف پول', callback_data='user:topUpWallet')],
             [InlineKeyboardButton('🧑‍💼 حساب کاربری', callback_data='user:manageAccount')],
             [InlineKeyboardButton('🧩 آموزش اتصال', callback_data='user:connectionGuide')],

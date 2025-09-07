@@ -1,8 +1,3 @@
-import random
-import string
-import uuid
-from datetime import datetime, timedelta, UTC
-
 from firebase_admin.firestore import firestore
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes, ConversationHandler
@@ -25,15 +20,6 @@ async def buy_subscription_start(update: Update, context: ContextTypes.DEFAULT_T
     context.user_data['buyPhase'] = {}
 
     if query.data != "returnToCategories":
-        if "latestInlineConversationMessageId" in context.user_data:
-            try:
-                await context.bot.delete_message(
-                    chat_id=update.effective_user.id,
-                    message_id=context.user_data["latestInlineConversationMessageId"]
-                )
-            except Exception as e:
-                raise BotError(e)
-
         context.user_data["latestInlineConversationMessageId"] = query.message.message_id
 
     await query.edit_message_text(
@@ -82,10 +68,9 @@ async def on_server(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     action, value = parse_callback(query.data)
 
-    server_id = value
-    context.user_data['buyPhase']['serverId'] = server_id
+    context.user_data['buyPhase']['serverId'] = value
     plan_details = json_storage.get('plans', context.user_data['buyPhase']['planId'])
-    server_details = json_storage.get('servers', server_id)
+    server_details = json_storage.get('servers', value)
 
     await query.edit_message_text(
         text="اطلاعات خرید شما:\n\n"
@@ -111,37 +96,20 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer('❌ موجودی کیف پول شما کافی نیست ❌', show_alert=True)
         return FINALIZE
 
-    config_uuid = str(uuid.uuid4())
-    config_email = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-    config_sub_id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-
     if server_details['panelType'] == 'sanaei':
-        expiry_date = datetime.now(UTC) + timedelta(days=plan_details['duration'])
-        total_bandwidth = plan_details['bandwidth'] * 1073741824
         try:
             client = sanaei.SanaeiClient(
                 server_details['panelUrl'],
                 server_details['panelUsername'],
                 server_details['panelPassword']
             )
-            server_inbounds = client.list_of_inbounds()
-            for inbound in server_inbounds:
-                if inbound.get('id'):
-                    inbound_data = {
-                        "id": config_uuid,
-                        "flow": "",
-                        "email": config_email + "_INBOUD_" + str(inbound['id']),
-                        "limitIp": 0,
-                        "totalGB": total_bandwidth,
-                        "expiryTime": int(expiry_date.timestamp()) * 1000,
-                        "enable": True,
-                        "tgId": update.effective_user.id,
-                        "subId": config_sub_id,
-                        "comment": "AUTO_GENERATED_BY_NEXUS",
-                        "reset": 0
-                    }
-                    client.create_inbound(inbound_id=inbound['id'], inbound_data=inbound_data)
-            config_url = client.get_sub_base_url() + f'{config_sub_id}'
+
+            created_sub = client.create_sub(
+                duration=plan_details['duration'],
+                bandwidth=plan_details['bandwidth'],
+                user_tg_id=update.effective_user.id
+            )
+            sub_url = client.get_sub_base_url() + f'{created_sub['subID']}'
 
             db_client.create('subscriptions', {
                 'userId': update.effective_user.id,
@@ -149,16 +117,15 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'subDuration': plan_details['duration'],
                 'subBandwidth': plan_details['bandwidth'],
                 'serverId': context.user_data['buyPhase']['serverId'],
-                'configUuid': config_uuid,
-                'configEmail': config_email,
-                'configSubId': config_sub_id,
+                **created_sub,
                 'isActive': True,
+                'subType': 'premium'
             })
             db_client.update('users', str(update.effective_user.id), {
                 'walletBalance': firestore.Increment(-plan_details['price'])
             })
 
-            qrcode = generate_qr(config_url, bg_path='assets/qr_bg.png')
+            qrcode = generate_qr(sub_url, bg_path='assets/qr_bg.png')
             await update.effective_chat.send_photo(
                 photo=qrcode,
                 caption=
@@ -166,15 +133,14 @@ async def on_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "⏰ مدت سرویس: " + f"{plan_details['duration']}" + " روز\n" +
                 "🔋 حجم سرویس: " + f"{plan_details['bandwidth']}" + " گیگابایت\n" +
                 "📍 لوکیشن سرور: " + f"{server_details['emoji']} {server_details['name']}\n\n" +
-                "🔻 لینک کانفیگ شما:\n\n" + f"<code>{config_url}</code>",
+                "🔻 لینک کانفیگ شما:\n\n" + f"<code>{sub_url}</code>",
                 parse_mode="HTML"
             )
-
         except Exception as e:
             raise BotError(e)
 
+    await query.delete_message()
     await query.answer()
-    return FINALIZE
 
     return ConversationHandler.END
 
@@ -204,7 +170,7 @@ buy_subscription_callback_handler = ConversationHandler(
         return_to_main_menu_inline_handler,
         start_command_handler,
     ],
-    name="buy_subscription_conversation_handler",
+    name='buy_subscription_conversation_handler',
     persistent=True,
     allow_reentry=False,
 )
